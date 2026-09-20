@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أرشيف - النظام الشامل</title>
+    <title>منصة أرشيف - النظام الشامل (معاينة حية وحذف)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,7 +15,7 @@
         <h1 class="text-xl font-bold flex items-center gap-2">
             <i class="fa-solid fa-shield-halved"></i> منصة أرشيف المستندات والبطاقات
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نسخة مريحة ومستقرة</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نسخة المعاينة والحذف</span>
     </header>
 
     <main class="max-w-4xl mx-auto p-6 flex flex-col gap-6 mt-4">
@@ -73,7 +74,7 @@
 
         <!-- قسم المعاينة وإدارة الصفحات الملتقطة -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة وإدارتها:</h3>
+            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة وإدارتها (مع إمكانية الحذف):</h3>
             <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صور بعد</p>
             </div>
@@ -84,15 +85,15 @@
             <i class="fa-solid fa-file-pdf"></i> دمج وتوليد ملف الـ PDF نهائياً
         </button>
 
-        <!-- قسم خيارات المعاينة والتحميل (يعمل 100% على كافة الهواتف) -->
-        <div id="previewPdfSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-4 text-center">
-            <h3 class="font-bold text-md text-blue-900 border-b pb-2">تم تجهيز ملف الـ PDF بنجاح!</h3>
-            <p class="text-xs text-slate-600">يمكنك معاينة الملف مباشرة في نافذة جديدة أو تحميله فوراً على جهازك:</p>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <a id="viewPdfLink" target="_blank" class="flex-1 bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-eye"></i> معاينة الـ PDF بتبويب جديد
-                </a>
-                <a id="downloadPdfLink" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
+        <!-- قسم المعاينة الحية للـ PDF -->
+        <div id="previewPdfSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-4">
+            <h3 class="font-bold text-md text-blue-900 border-b pb-2 flex justify-between items-center">
+                <span>معاينة المستند المدمج مباشرة</span>
+                <span class="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded">جاهز للاعتماد</span>
+            </h3>
+            <iframe id="pdfPreviewFrame" class="w-full h-96 rounded-lg border bg-slate-50"></iframe>
+            <div class="flex gap-4">
+                <a id="downloadPdfLink" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
                     <i class="fa-solid fa-download"></i> تحميل الملف على الجهاز
                 </a>
             </div>
@@ -122,7 +123,7 @@
         const bwFilterToggle = document.getElementById('bwFilterToggle');
         const watermarkText = document.getElementById('watermarkText');
         const previewPdfSection = document.getElementById('previewPdfSection');
-        const viewPdfLink = document.getElementById('viewPdfLink');
+        const pdfPreviewFrame = document.getElementById('pdfPreviewFrame');
         const downloadPdfLink = document.getElementById('downloadPdfLink');
 
         let currentMode = 'civil';
@@ -250,17 +251,31 @@
             generatePdfBtn.disabled = false;
         });
 
-        window.deletePage = function(index) {
-            multiPages.splice(index, 1);
+        // دالة الحذف (زر X الأحمر)
+        window.deleteItem = function(type, index) {
+            if (type === 'front') {
+                civilImages.front = null;
+                captureFrontBtn.innerHTML = '<i class="fa-solid fa-camera"></i> التقاط الأمامي';
+                captureFrontBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                generatePdfBtn.disabled = true;
+            } else if (type === 'back') {
+                civilImages.back = null;
+                captureBackBtn.innerHTML = '<i class="fa-solid fa-camera-rotate"></i> التقاط الخلفي';
+                captureBackBtn.classList.replace('bg-green-600', 'bg-indigo-600');
+                generatePdfBtn.disabled = true;
+            } else if (type === 'doc') {
+                multiPages.splice(index, 1);
+                if (multiPages.length === 0) generatePdfBtn.disabled = true;
+            }
             updatePreviewUI();
-            if (multiPages.length === 0) generatePdfBtn.disabled = true;
+            previewPdfSection.classList.add('hidden');
         };
 
         function updatePreviewUI() {
             previewContainer.innerHTML = '';
             if (currentMode === 'civil') {
-                if (civilImages.front) appendPreview('الوجه الأمامي', URL.createObjectURL(civilImages.front), null);
-                if (civilImages.back) appendPreview('الوجه الخلفي', URL.createObjectURL(civilImages.back), null);
+                if (civilImages.front) appendPreview('الوجه الأمامي', URL.createObjectURL(civilImages.front), 'front', null);
+                if (civilImages.back) appendPreview('الوجه الخلفي', URL.createObjectURL(civilImages.back), 'back', null);
                 if (!civilImages.front && !civilImages.back) {
                     previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صور للبطاقة بعد</p>';
                 }
@@ -269,16 +284,19 @@
                     previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صفحات بعد</p>';
                 } else {
                     multiPages.forEach((blob, idx) => {
-                        appendPreview(`صفحة (${idx + 1})`, URL.createObjectURL(blob), idx);
+                        appendPreview(`صفحة (${idx + 1})`, URL.createObjectURL(blob), 'doc', idx);
                     });
                 }
             }
         }
 
-        function appendPreview(label, url, index) {
+        function appendPreview(label, url, type, index) {
             const div = document.createElement('div');
-            div.className = 'border rounded-lg p-2 flex flex-col items-center bg-slate-50 relative';
-            let deleteBtnHtml = index !== null ? `<button onclick="deletePage(${index})" class="absolute top-1 left-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow" title="حذف الصفحة"><i class="fa-solid fa-xmark"></i></button>` : '';
+            div.className = 'border rounded-lg p-2 flex flex-col items-center bg-slate-50 relative shadow-sm';
+            
+            let deleteParam = type === 'doc' ? `'doc', ${index}` : `'${type}', null`;
+            let deleteBtnHtml = `<button onclick="deleteItem(${deleteParam})" class="absolute top-1 left-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow hover:bg-red-700 transition" title="حذف الصورة"><i class="fa-solid fa-xmark"></i></button>`;
+
             div.innerHTML = `
                 ${deleteBtnHtml}
                 <span class="text-xs font-bold text-slate-600 mb-1">${label}</span>
@@ -289,7 +307,7 @@
 
         generatePdfBtn.addEventListener('click', async () => {
             generatePdfBtn.disabled = true;
-            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري توليد ملف الـ PDF...';
+            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري توليد المعاينة الحية...';
 
             try {
                 const pdfDoc = await PDFLib.PDFDocument.create();
@@ -341,7 +359,8 @@
                 const blob = new Blob([pdfBytes], { type: 'application/pdf'});
                 const pdfUrl = URL.createObjectURL(blob);
 
-                viewPdfLink.href = pdfUrl;
+                // إظهار المعاينة الحية مباشرة داخل الـ iframe بداخل الموقع
+                pdfPreviewFrame.src = pdfUrl;
                 downloadPdfLink.href = pdfUrl;
                 downloadPdfLink.download = (currentMode === 'civil' ? 'Civil_ID_' : 'Document_Scan_') + Date.now() + '.pdf';
                 
@@ -359,4 +378,3 @@
     </script>
 </body>
 </html>
-
