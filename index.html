@@ -99,12 +99,12 @@
             </div>
         </div>
 
-        <!-- قسم رفع الملفات والصور -->
+        <!-- قسم رفع الملفات والصور (مع المعالجة التلقائية للصور الكبيرة) -->
         <div id="uploadSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-3 text-center">
             <h2 class="font-bold text-sm text-blue-900 border-b pb-2 text-right">رفع الصور أو ملفات الـ PDF الجاهزة</h2>
             <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center bg-slate-50 gap-2">
                 <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-600"></i>
-                <p class="text-xs text-slate-600">اختر صور (JPG/PNG) أو ملفات (PDF) من جهازك:</p>
+                <p class="text-xs text-slate-600">اختر صور (JPG/PNG) أو ملفات (PDF) من جهازك (يتم الضغط المعالج تلقائياً):</p>
                 <input type="file" id="fileUploader" multiple accept="image/*,application/pdf" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
             </div>
         </div>
@@ -280,7 +280,7 @@
                 ctx.putImageData(imgData, 0, 0);
             }
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.90);
             const arr = dataUrl.split(',');
             const mime = arr[0].match(/:(.*?);/)[1];
             const bstr = atob(arr[1]);
@@ -333,6 +333,46 @@
             generatePdfBtn.disabled = false;
         });
 
+        // دالة لضغط الصور الكبيرة جداً ذكياً وتجنب أي خطأ في الذاكرة
+        function compressImageFile(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // تحديد الحد الأقصى لأبعاد الصورة لضمان خفة وسرعة المعالجة
+                        const MAX_DIMENSION = 1600;
+                        if (width > height && width > MAX_DIMENSION) {
+                            height = Math.round((height * MAX_DIMENSION) / width);
+                            width = MAX_DIMENSION;
+                        } else if (height > MAX_DIMENSION) {
+                            width = Math.round((width * MAX_DIMENSION) / height);
+                            height = MAX_DIMENSION;
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob((blob) => {
+                            const readerBlob = new FileReader();
+                            readerBlob.onload = function(event) {
+                                resolve({ blob: blob, dataUrl: event.target.result, type: 'image', name: file.name });
+                            };
+                            readerBlob.readAsDataURL(blob);
+                        }, 'image/jpeg', 0.85); // ضغط آمن وممتاز للوضوح
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         fileUploader.addEventListener('change', async (e) => {
             const files = e.target.files;
             if (!files.length) return;
@@ -342,14 +382,9 @@
                     const arrayBuffer = await file.arrayBuffer();
                     multiPages.push({ blob: new Blob([arrayBuffer], {type: 'application/pdf'}), type: 'pdf', name: file.name });
                 } else if (file.type.startsWith('image/')) {
-                    const dataUrl = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.readAsDataURL(file);
-                    });
-                    const res = await fetch(dataUrl);
-                    const blob = await res.blob();
-                    multiPages.push({ blob, dataUrl, type: 'image', name: file.name });
+                    // معالجة وضغط الصور الضخمة تلقائياً
+                    const compressedObj = await compressImageFile(file);
+                    multiPages.push(compressedObj);
                 }
             }
             updatePreviewUI();
@@ -389,7 +424,7 @@
                     previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-3">لم يتم رفع أو التقاط أي ملفات بعد</p>';
                 } else {
                     multiPages.forEach((item, idx) => {
-                        let label = item.type === 'pdf' ? `PDF: ${item.name}` : `صفحة (${idx + 1})`;
+                        let label = item.type === 'pdf' ? `PDF: ${item.name}` : `ملف (${idx + 1})`;
                         let previewSrc = item.type === 'pdf' ? 'https://cdn-icons-png.flaticon.com/512/337/337946.png' : item.dataUrl;
                         appendPreview(label, previewSrc, 'doc', idx);
                     });
