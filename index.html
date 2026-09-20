@@ -3,68 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أرشيف رصد - النظام الشامل والذكي</title>
+    <title>منصة أرشيف رصد - النسخة الذكية والمضغوطة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
-    <header class="bg-blue-900 text-white shadow-md py-4 px-6 flex justify-between items-center">
-        <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-folder-tree"></i> منصة أرشيف رصد (الإصدار الشامل)
+    <header class="bg-blue-900 text-white shadow-md py-3 px-4 flex justify-between items-center">
+        <h1 class="text-base sm:text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-folder-tree"></i> منصة أرشيف رصد
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نظام الأرشيف الذكي</span>
+        <span class="text-xs bg-blue-800 px-2.5 py-1 rounded-full">نسخة الموبايل المطورة</span>
     </header>
 
-    <main class="max-w-4xl mx-auto p-6 flex flex-col gap-6 mt-4">
+    <main class="max-w-4xl mx-auto p-4 sm:p-6 flex flex-col gap-4 mt-2">
 
-        <!-- أزرار اختيار وضع العمل -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-center gap-3">
-            <button id="modeCivilBtn" onclick="switchMode('civil')" class="px-4 py-2 rounded-lg font-bold text-xs bg-blue-600 text-white transition shadow-sm">
-                <i class="fa-solid fa-id-card ml-1"></i> بطاقة مدنية (كاميرا)
+        <!-- أزرار الأوضاع بجانب بعضها بشكل متناسق ومضغوط -->
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 grid grid-cols-3 gap-2">
+            <button id="modeCivilBtn" onclick="switchMode('civil')" class="py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-blue-600 text-white transition shadow-sm text-center truncate">
+                <i class="fa-solid fa-id-card block sm:inline mb-0.5 sm:ml-1"></i> بطاقة مدنية
             </button>
-            <button id="modeDocsBtn" onclick="switchMode('docs')" class="px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm">
-                <i class="fa-solid fa-file-lines ml-1"></i> مستندات متعددة (كاميرا)
+            <button id="modeDocsBtn" onclick="switchMode('docs')" class="py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-slate-200 text-slate-700 transition shadow-sm text-center truncate">
+                <i class="fa-solid fa-file-lines block sm:inline mb-0.5 sm:ml-1"></i> مستندات
             </button>
-            <button id="modeUploadBtn" onclick="switchMode('upload')" class="px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm">
-                <i class="fa-solid fa-upload ml-1"></i> رفع صور أو ملفات PDF
+            <button id="modeUploadBtn" onclick="switchMode('upload')" class="py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-slate-200 text-slate-700 transition shadow-sm text-center truncate">
+                <i class="fa-solid fa-upload block sm:inline mb-0.5 sm:ml-1"></i> رفع ملفات
             </button>
         </div>
 
-        <!-- إعدادات التسمية الذكية والختم -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">نوع المستند للتسمية:</label>
-                <select id="docTypeSelect" class="w-full border rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-600 bg-slate-50 font-bold">
-                    <option value="Civil_ID">بطاقة مدنية</option>
-                    <option value="Residency">إقامة</option>
-                    <option value="Contract">عقد عمل</option>
-                    <option value="Passport">جواز سفر</option>
-                    <option value="Official_Letter">مستند رسمي</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">اسم صاحب المستند / الملف:</label>
-                <input type="text" id="docNameInput" placeholder="مثال: حسان محمود" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">العلامة المائية / الختم:</label>
-                <input type="text" id="watermarkText" placeholder="مثال: مطابق للأصل" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
+        <!-- إعدادات التسمية والختم ضمن قائمة منسدلة (لتوفير المساحة) -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <button onclick="toggleSettings()" class="w-full p-3 bg-slate-50 hover:bg-slate-100 flex justify-between items-center text-xs font-bold text-blue-900 transition">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-sliders"></i> خيارات التسمية الذكية والختم</span>
+                <i id="settingsChevron" class="fa-solid fa-chevron-down transition-transform"></i>
+            </button>
+            <div id="settingsBody" class="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t hidden bg-slate-50/50">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1">نوع المستند:</label>
+                    <select id="docTypeSelect" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-white font-bold">
+                        <option value="Civil_ID">بطاقة مدنية</option>
+                        <option value="Residency">إقامة</option>
+                        <option value="Contract">عقد عمل</option>
+                        <option value="Passport">جواز سفر</option>
+                        <option value="Official_Letter">مستند رسمي</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1">اسم صاحب المستند:</label>
+                    <input type="text" id="docNameInput" placeholder="مثال: حسان محمود" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1">العلامة المائية / الختم:</label>
+                    <input type="text" id="watermarkText" placeholder="مثال: مطابق للأصل" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-white">
+                </div>
             </div>
         </div>
 
         <!-- فلتر الأبيض والأسود -->
-        <div id="filterSection" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <div id="filterSection" class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" id="bwFilterToggle" class="w-4 h-4 text-blue-600 rounded">
-                <span class="text-xs font-bold text-slate-700">تفعيل فلتر الماسح الضوئي (أبيض وأسود فائق الوضوح للكتابة)</span>
+                <span class="text-xs font-bold text-slate-700">تفعيل فلتر الماسح الضوئي (أبيض وأسود فائق الوضوح)</span>
             </label>
         </div>
 
         <!-- قسم الكاميرا -->
-        <div id="cameraSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
-            <h2 id="cameraTitle" class="font-bold text-lg text-blue-900 mb-3 w-full text-right border-b pb-2">تصوير الوجه الأمامي للبطاقة</h2>
+        <div id="cameraSection" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
+            <h2 id="cameraTitle" class="font-bold text-sm sm:text-base text-blue-900 mb-3 w-full text-right border-b pb-2">تصوير الوجه الأمامي للبطاقة</h2>
             
             <div id="cameraContainer" class="w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[16/10] flex items-center justify-center border-2 border-blue-900 shadow-inner transition-all duration-300">
                 <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
@@ -76,67 +82,67 @@
             </div>
 
             <!-- أزرار البطاقة -->
-            <div id="civilControls" class="flex gap-4 mt-4 w-full max-w-lg">
-                <button id="captureFrontBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-bold transition shadow flex items-center justify-center gap-2">
+            <div id="civilControls" class="flex gap-3 mt-3 w-full max-w-lg">
+                <button id="captureFrontBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-lg font-bold text-xs transition shadow flex items-center justify-center gap-2">
                     <i class="fa-solid fa-camera"></i> التقاط الأمامي
                 </button>
-                <button id="captureBackBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg font-bold transition shadow flex items-center justify-center gap-2" disabled>
+                <button id="captureBackBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-3 rounded-lg font-bold text-xs transition shadow flex items-center justify-center gap-2" disabled>
                     <i class="fa-solid fa-camera-rotate"></i> التقاط الخلفي
                 </button>
             </div>
 
             <!-- أزرار المستندات المتعددة -->
-            <div id="docsControls" class="flex gap-4 mt-4 w-full max-w-lg hidden">
-                <button id="capturePageBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-bold transition shadow flex items-center justify-center gap-2">
+            <div id="docsControls" class="flex gap-3 mt-3 w-full max-w-lg hidden">
+                <button id="capturePageBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-3 rounded-lg font-bold text-xs transition shadow flex items-center justify-center gap-2">
                     <i class="fa-solid fa-plus-circle"></i> التقاط صفحة جديدة
                 </button>
             </div>
         </div>
 
         <!-- قسم رفع الملفات والصور -->
-        <div id="uploadSection" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-4 text-center">
-            <h2 class="font-bold text-lg text-blue-900 border-b pb-2 text-right">رفع الصور أو ملفات الـ PDF الجاهزة</h2>
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 gap-3">
-                <i class="fa-solid fa-cloud-arrow-up text-4xl text-blue-600"></i>
-                <p class="text-xs text-slate-600">اختر صور (JPG/PNG) أو ملفات (PDF) من جهازك للدمج والأرشفة:</p>
+        <div id="uploadSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-3 text-center">
+            <h2 class="font-bold text-sm text-blue-900 border-b pb-2 text-right">رفع الصور أو ملفات الـ PDF الجاهزة</h2>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center bg-slate-50 gap-2">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-600"></i>
+                <p class="text-xs text-slate-600">اختر صور (JPG/PNG) أو ملفات (PDF) من جهازك:</p>
                 <input type="file" id="fileUploader" multiple accept="image/*,application/pdf" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
             </div>
         </div>
 
-        <!-- قسم المعاينة وإدارة الصفحات (مع زر الحذف X) -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة أو المرفوعة (مع إمكانية الحذف):</h3>
-            <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم اختيار أو التقاط أي ملفات بعد</p>
+        <!-- قسم المعاينة وإدارة الصفحات -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="font-bold text-xs sm:text-sm text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة أو المرفوعة:</h3>
+            <div id="previewContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <p class="text-xs text-slate-400 col-span-full text-center py-3">لم يتم اختيار أو التقاط أي ملفات بعد</p>
             </div>
         </div>
 
         <!-- زر الدمج والتصدير -->
-        <button id="generatePdfBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-6 rounded-xl font-bold text-lg shadow transition disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2" disabled>
+        <button id="generatePdfBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-6 rounded-xl font-bold text-sm sm:text-base shadow transition disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center justify-center gap-2" disabled>
             <i class="fa-solid fa-file-pdf"></i> دمج وتوليد ملف الـ PDF نهائياً
         </button>
 
         <!-- قسم المعاينة الحية للـ PDF -->
-        <div id="previewPdfSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-4">
-            <h3 class="font-bold text-md text-blue-900 border-b pb-2 flex justify-between items-center">
+        <div id="previewPdfSection" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-3">
+            <h3 class="font-bold text-xs sm:text-sm text-blue-900 border-b pb-2 flex justify-between items-center">
                 <span>معاينة المستند المدمج الحالي</span>
-                <span class="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded">جاهز للاعتماد</span>
+                <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">جاهز للاعتماد</span>
             </h3>
-            <div class="flex flex-col sm:flex-row gap-3">
-                <a id="viewPdfTabLink" target="_blank" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-external-link-alt"></i> فتح الملف في تبويب جديد
+            <div class="flex flex-col sm:flex-row gap-2">
+                <a id="viewPdfTabLink" target="_blank" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-bold text-xs text-center transition shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-external-link-alt"></i> فتح بتبويب جديد
                 </a>
-                <a id="downloadPdfLink" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> تحميل الملف على الجهاز
+                <a id="downloadPdfLink" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-2.5 rounded-lg font-bold text-xs text-center transition shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> تحميل الجهاز
                 </a>
             </div>
         </div>
 
         <!-- سجل الأرشيف المحلي التفاعلي -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2 flex justify-between items-center">
-                <span><i class="fa-solid fa-history ml-1"></i> سجل الأرشيف المحلي (انقر لفتح أي ملف محفوظ سابقاً)</span>
-                <button onclick="clearHistory()" class="text-xs text-red-600 hover:underline">مسح السجل</button>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="font-bold text-xs sm:text-sm text-blue-900 mb-3 border-b pb-2 flex justify-between items-center">
+                <span><i class="fa-solid fa-history ml-1"></i> سجل الأرشيف المحلي</span>
+                <button onclick="clearHistory()" class="text-[11px] text-red-600 hover:underline">مسح السجل</button>
             </h3>
             <div id="historyContainer" class="flex flex-col gap-2">
                 <p class="text-xs text-slate-400 text-center py-3">لا توجد عمليات أرشيف مسجلة حتى الآن</p>
@@ -181,9 +187,17 @@
         const downloadPdfLink = document.getElementById('downloadPdfLink');
         const historyContainer = document.getElementById('historyContainer');
 
+        const settingsBody = document.getElementById('settingsBody');
+        const settingsChevron = document.getElementById('settingsChevron');
+
         let currentMode = 'civil';
         let civilImages = { front: null, back: null };
         let multiPages = [];
+
+        function toggleSettings() {
+            settingsBody.classList.toggle('hidden');
+            settingsChevron.classList.toggle('rotate-180');
+        }
 
         async function initCamera() {
             try {
@@ -209,12 +223,12 @@
             generatePdfBtn.disabled = true;
             previewPdfSection.classList.add('hidden');
 
-            modeCivilBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm";
-            modeDocsBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm";
-            modeUploadBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm";
+            modeCivilBtn.className = "py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-slate-200 text-slate-700 transition shadow-sm text-center truncate";
+            modeDocsBtn.className = "py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-slate-200 text-slate-700 transition shadow-sm text-center truncate";
+            modeUploadBtn.className = "py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-slate-200 text-slate-700 transition shadow-sm text-center truncate";
 
             if (mode === 'civil') {
-                modeCivilBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-blue-600 text-white transition shadow-sm";
+                modeCivilBtn.className = "py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-blue-600 text-white transition shadow-sm text-center truncate";
                 civilControls.classList.remove('hidden');
                 docsControls.classList.add('hidden');
                 cameraSection.classList.remove('hidden');
@@ -229,7 +243,7 @@
                 captureBackBtn.disabled = true;
                 captureBackBtn.innerHTML = '<i class="fa-solid fa-camera-rotate"></i> التقاط الخلفي';
             } else if (mode === 'docs') {
-                modeDocsBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white transition shadow-sm";
+                modeDocsBtn.className = "py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-emerald-600 text-white transition shadow-sm text-center truncate";
                 docsControls.classList.remove('hidden');
                 civilControls.classList.add('hidden');
                 cameraSection.classList.remove('hidden');
@@ -240,7 +254,7 @@
                 guideText.textContent = "ضع المستند الطولي هنا";
                 cameraTitle.textContent = "التقاط صفحات المستند (متعدد الصفحات)";
             } else if (mode === 'upload') {
-                modeUploadBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-indigo-600 text-white transition shadow-sm";
+                modeUploadBtn.className = "py-2 px-1 rounded-lg font-bold text-[11px] sm:text-xs bg-indigo-600 text-white transition shadow-sm text-center truncate";
                 cameraSection.classList.add('hidden');
                 uploadSection.classList.remove('hidden');
                 filterSection.classList.add('hidden');
@@ -368,14 +382,14 @@
                 if (civilImages.front) appendPreview('الوجه الأمامي', civilImages.front.dataUrl, 'front', null);
                 if (civilImages.back) appendPreview('الوجه الخلفي', civilImages.back.dataUrl, 'back', null);
                 if (!civilImages.front && !civilImages.back) {
-                    previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صور للبطاقة بعد</p>';
+                    previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-3">لم يتم التقاط أي صور للبطاقة بعد</p>';
                 }
             } else {
                 if (multiPages.length === 0) {
-                    previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم رفع أو التقاط أي ملفات بعد</p>';
+                    previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-3">لم يتم رفع أو التقاط أي ملفات بعد</p>';
                 } else {
                     multiPages.forEach((item, idx) => {
-                        let label = item.type === 'pdf' ? `ملف PDF: ${item.name}` : `صفحة (${idx + 1})`;
+                        let label = item.type === 'pdf' ? `PDF: ${item.name}` : `صفحة (${idx + 1})`;
                         let previewSrc = item.type === 'pdf' ? 'https://cdn-icons-png.flaticon.com/512/337/337946.png' : item.dataUrl;
                         appendPreview(label, previewSrc, 'doc', idx);
                     });
@@ -387,12 +401,12 @@
             const div = document.createElement('div');
             div.className = 'border rounded-lg p-2 flex flex-col items-center bg-slate-50 relative shadow-sm';
             let deleteParam = type === 'doc' ? `'doc', ${index}` : `'${type}', null`;
-            let deleteBtnHtml = `<button onclick="deleteItem(${deleteParam})" class="absolute top-1 left-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow hover:bg-red-700 transition" title="حذف الملف"><i class="fa-solid fa-xmark"></i></button>`;
+            let deleteBtnHtml = `<button onclick="deleteItem(${deleteParam})" class="absolute top-1 left-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow hover:bg-red-700 transition" title="حذف الملف"><i class="fa-solid fa-xmark"></i></button>`;
 
             div.innerHTML = `
                 ${deleteBtnHtml}
-                <span class="text-xs font-bold text-slate-600 mb-1 truncate w-full text-center">${label}</span>
-                <img src="${url}" class="h-24 object-contain rounded shadow border bg-white">
+                <span class="text-[11px] font-bold text-slate-600 mb-1 truncate w-full text-center">${label}</span>
+                <img src="${url}" class="h-20 object-contain rounded shadow border bg-white">
             `;
             previewContainer.appendChild(div);
         }
@@ -437,13 +451,13 @@
             historyContainer.innerHTML = '';
             history.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.className = 'flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border text-xs';
+                div.className = 'flex justify-between items-center bg-slate-50 p-2 rounded-lg border text-xs gap-2';
                 div.innerHTML = `
-                    <span class="font-bold text-blue-900 truncate max-w-[180px]"><i class="fa-solid fa-file-pdf text-red-500 ml-1"></i> ${item.name}</span>
-                    <span class="text-slate-500">${item.date}</span>
-                    <div class="flex gap-1">
-                        <button onclick="openArchivedPdf(${index})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition"><i class="fa-solid fa-eye"></i> فتح</button>
-                        <button onclick="downloadArchivedPdf(${index})" class="bg-blue-800 hover:bg-blue-900 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition"><i class="fa-solid fa-download"></i></button>
+                    <span class="font-bold text-blue-900 truncate max-w-[140px] sm:max-w-[250px]"><i class="fa-solid fa-file-pdf text-red-500 ml-1"></i> ${item.name}</span>
+                    <span class="text-slate-400 text-[10px] hidden sm:inline">${item.date}</span>
+                    <div class="flex gap-1 shrink-0">
+                        <button onclick="openArchivedPdf(${index})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded text-[10px] font-bold shadow transition"><i class="fa-solid fa-eye"></i> فتح</button>
+                        <button onclick="downloadArchivedPdf(${index})" class="bg-blue-800 hover:bg-blue-900 text-white px-2 py-1 rounded text-[10px] font-bold shadow transition"><i class="fa-solid fa-download"></i></button>
                     </div>
                 `;
                 historyContainer.appendChild(div);
