@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أرشيف - تصوير البطاقة المدنية عالية الدقة</title>
+    <title>أرشيف - تصوير وتعديل البطاقة المدنية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,21 +12,20 @@
 
     <header class="bg-blue-900 text-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-id-card"></i> نظام تصوير البطاقة المدنية (وجهين)
+            <i class="fa-solid fa-id-card"></i> نظام تصوير وتعديل البطاقة المدنية
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">عالية الدقة</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">مع محرر الصور</span>
     </header>
 
     <main class="max-w-3xl mx-auto p-6 flex flex-col gap-6 mt-4">
 
-        <!-- قسم الكاميرا (عرضي - Landscape مناسب للبطاقة) -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center">
+        <!-- قسم الكاميرا (عرضي - Landscape) -->
+        <div id="cameraSection" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center">
             <h2 id="cameraTitle" class="font-bold text-lg text-blue-900 mb-3 w-full text-right border-b pb-2">تصوير الوجه الأمامي للبطاقة</h2>
             
             <div class="w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[16/10] flex items-center justify-center border-2 border-blue-900 shadow-inner">
                 <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
                 <canvas id="canvas" class="hidden"></canvas>
-                <!-- إطار توجيهي لمكان البطاقة -->
                 <div class="absolute border-2 border-dashed border-yellow-400 rounded-lg w-[85%] h-[80%] pointer-events-none flex items-center justify-center">
                     <span class="bg-black/50 text-yellow-300 text-xs px-2 py-1 rounded">ضع البطاقة داخل الإطار</span>
                 </div>
@@ -42,20 +41,53 @@
             </div>
         </div>
 
-        <!-- معاينة الصور الملتقطة -->
+        <!-- قسم التعديل المؤقت (مخفي حتى يتم الالتقاط) -->
+        <div id="editorSection" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hidden flex flex-col gap-4">
+            <h2 class="font-bold text-lg text-blue-900 border-b pb-2 flex justify-between items-center">
+                <span>محرر وتحسين الصورة الملتقطة</span>
+                <span id="editingTargetLabel" class="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full"></span>
+            </h2>
+            
+            <div class="flex flex-col items-center bg-gray-900 p-3 rounded-lg">
+                <canvas id="editCanvas" class="max-h-64 object-contain rounded shadow border border-gray-700"></canvas>
+            </div>
+
+            <!-- أدوات التعديل والإضاءة والفلتر -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">السطوع (Brightness): <span id="brightnessVal">100</span>%</label>
+                    <input type="range" id="brightnessRange" min="50" max="150" value="100" class="w-full cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">التباين والوضوح (Contrast): <span id="contrastVal">100</span>%</label>
+                    <input type="range" id="contrastRange" min="50" max="180" value="100" class="w-full cursor-pointer">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="applyEditBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-bold transition shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> اعتماد الصورة وتثبيتها
+                </button>
+                <button id="cancelEditBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2.5 rounded-lg font-medium transition">
+                    إعادة التقاط
+                </button>
+            </div>
+        </div>
+
+        <!-- معاينة الصور النهائية -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="border rounded-xl p-3 flex flex-col items-center bg-gray-50">
-                <p class="text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-image text-blue-600 ml-1"></i> الوجه الأمامي</p>
+                <p class="text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-image text-blue-600 ml-1"></i> الوجه الأمامي (المعتمد)</p>
                 <div id="frontPreview" class="text-gray-400 text-xs text-center py-6">لم يتم الالتقاط بعد</div>
             </div>
             <div class="border rounded-xl p-3 flex flex-col items-center bg-gray-50">
-                <p class="text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-image text-indigo-600 ml-1"></i> الوجه الخلفي</p>
+                <p class="text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-image text-indigo-600 ml-1"></i> الوجه الخلفي (المعتمد)</p>
                 <div id="backPreview" class="text-gray-400 text-xs text-center py-6">لم يتم الالتقاط بعد</div>
             </div>
         </div>
 
         <!-- زر الدمج والتصدير النهائي -->
-        <button id="generatePdfBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-6 rounded-xl font-bold text-lg shadow transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2" disabled>
+        <button id="generatePdfBtn" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3.5 px-6 rounded-xl font-bold text-lg shadow transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2" disabled>
             <i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة في ملف PDF وتحميله
         </button>
 
@@ -64,6 +96,18 @@
     <script>
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
+        const editCanvas = document.getElementById('editCanvas');
+        const cameraSection = document.getElementById('cameraSection');
+        const editorSection = document.getElementById('editorSection');
+        const editingTargetLabel = document.getElementById('editingTargetLabel');
+        
+        const brightnessRange = document.getElementById('brightnessRange');
+        const contrastRange = document.getElementById('contrastRange');
+        const brightnessVal = document.getElementById('brightnessVal');
+        const contrastVal = document.getElementById('contrastVal');
+        
+        const applyEditBtn = document.getElementById('applyEditBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const cameraTitle = document.getElementById('cameraTitle');
 
@@ -72,34 +116,33 @@
         const frontPreview = document.getElementById('frontPreview');
         const backPreview = document.getElementById('backPreview');
 
+        let currentEditingType = ''; // 'front' أو 'back'
+        let rawImageObj = null;
         let frontImageBlob = null;
         let backImageBlob = null;
 
-        // تشغيل الكاميرا بأعلى جودة ودقة متوفرة
+        // تشغيل الكاميرا
         async function initCamera() {
             try {
-                const constraints = {
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
-                };
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+                });
                 video.srcObject = stream;
             } catch (err) {
                 try {
-                    const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    video.srcObject = fallbackStream;
+                    video.srcObject = await navigator.mediaDevices.getUserMedia({ video: true });
                 } catch (e) {
-                    alert('تعذر تشغيل الكاميرا، تأكد من إعطاء الصلاحية.');
+                    alert('تعذر تشغيل الكاميرا.');
                 }
             }
         }
         initCamera();
 
-        // التقاط الصورة بأعلى دقة بدون تدوير (Landscape)
-        function captureCardImage() {
+        // التقاط الصورة مبدئياً وفتح محرر التعديل
+        function captureAndOpenEditor(type) {
+            currentEditingType = type;
+            editingTargetLabel.textContent = type === 'front' ? 'تعديل الوجه الأمامي' : 'تعديل الوجه الخلفي';
+
             const videoWidth = video.videoWidth || 1280;
             const videoHeight = video.videoHeight || 720;
 
@@ -108,54 +151,98 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
 
-            // جودة عالية جداً (0.95) للحفاظ على وضوح الخطوط والأرقام
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            rawImageObj = new Image();
+            rawImageObj.src = canvas.toDataURL('image/jpeg', 0.95);
+            rawImageObj.onload = () => {
+                resetSliders();
+                drawEditedImage();
+                cameraSection.classList.add('hidden');
+                editorSection.classList.remove('hidden');
+            };
+        }
+
+        // رسم الصورة مع تعديلات السطوع والتباين
+        function drawEditedImage() {
+            if (!rawImageObj) return;
+            editCanvas.width = rawImageObj.width;
+            editCanvas.height = rawImageObj.height;
+            const ctx = editCanvas.getContext('2d');
+
+            ctx.filter = `brightness(${brightnessRange.value}%) contrast(${contrastRange.value}%)`;
+            ctx.drawImage(rawImageObj, 0, 0);
+        }
+
+        brightnessRange.addEventListener('input', () => {
+            brightnessVal.textContent = brightnessRange.value;
+            drawEditedImage();
+        });
+
+        contrastRange.addEventListener('input', () => {
+            contrastVal.textContent = contrastRange.value;
+            drawEditedImage();
+        });
+
+        function resetSliders() {
+            brightnessRange.value = 100;
+            contrastRange.value = 100;
+            brightnessVal.textContent = '100';
+            contrastVal.textContent = '100';
+        }
+
+        // أزرار الالتقاط
+        captureFrontBtn.addEventListener('click', () => captureAndOpenEditor('front'));
+        captureBackBtn.addEventListener('click', () => captureAndOpenEditor('back'));
+
+        // إلغاء التعديل والعودة للكاميرا
+        cancelEditBtn.addEventListener('click', () => {
+            editorSection.classList.add('hidden');
+            cameraSection.classList.remove('hidden');
+        });
+
+        // اعتماد التعديل وتحويلها لـ Blob
+        applyEditBtn.addEventListener('click', () => {
+            const dataUrl = editCanvas.toDataURL('image/jpeg', 0.95);
             
+            // تحويل لـ Blob
             const arr = dataUrl.split(',');
             const mime = arr[0].match(/:(.*?);/)[1];
             const bstr = atob(arr[1]);
             let n = bstr.length;
             const u8arr = new Uint8Array(n);
             while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-            
-            return { blob: new Blob([u8arr], {type: mime}), dataUrl };
-        }
+            const blob = new Blob([u8arr], {type: mime});
 
-        // زر التقاط الوجه الأمامي
-        captureFrontBtn.addEventListener('click', () => {
-            const res = captureCardImage();
-            frontImageBlob = res.blob;
-            frontPreview.innerHTML = `<img src="${res.dataUrl}" class="h-32 object-contain rounded shadow border">`;
-            
-            captureFrontBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم الأمامي';
-            captureFrontBtn.classList.replace('bg-blue-600', 'bg-green-600');
-            captureBackBtn.disabled = false;
-            cameraTitle.textContent = "تصوير الوجه الخلفي للبطاقة";
-        });
+            if (currentEditingType === 'front') {
+                frontImageBlob = blob;
+                frontPreview.innerHTML = `<img src="${dataUrl}" class="h-32 object-contain rounded shadow border">`;
+                captureFrontBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم تعديل الأمامي';
+                captureFrontBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                captureBackBtn.disabled = false;
+                cameraTitle.textContent = "تصوير الوجه الخلفي للبطاقة";
+            } else {
+                backImageBlob = blob;
+                backPreview.innerHTML = `<img src="${dataUrl}" class="h-32 object-contain rounded shadow border">`;
+                captureBackBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم تعديل الخلفي';
+                captureBackBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+                cameraTitle.textContent = "تم تجهيز وجهي البطاقة بنجاح";
+            }
 
-        // زر التقاط الوجه الخلفي
-        captureBackBtn.addEventListener('click', () => {
-            const res = captureCardImage();
-            backImageBlob = res.blob;
-            backPreview.innerHTML = `<img src="${res.dataUrl}" class="h-32 object-contain rounded shadow border">`;
-            
-            captureBackBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم الخلفي';
-            captureBackBtn.classList.replace('bg-indigo-600', 'bg-green-600');
-            
             if (frontImageBlob && backImageBlob) {
                 generatePdfBtn.disabled = false;
             }
-            cameraTitle.textContent = "تم التقاط وجهي البطاقة بنجاح";
+
+            editorSection.classList.add('hidden');
+            cameraSection.classList.remove('hidden');
         });
 
-        // زر الدمج النهائي للبطاقة بملف PDF
+        // دمج PDF
         generatePdfBtn.addEventListener('click', async () => {
             generatePdfBtn.disabled = true;
             generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري دمج البطاقة...';
 
             try {
                 const pdfDoc = await PDFLib.PDFDocument.create();
-                const page = pdfDoc.addPage([595.28, 841.89]); // A4 Portrait
+                const page = pdfDoc.addPage([595.28, 841.89]);
 
                 const frontBytes = await frontImageBlob.arrayBuffer();
                 const backBytes = await backImageBlob.arrayBuffer();
@@ -163,37 +250,23 @@
                 const frontImage = await pdfDoc.embedJpg(frontBytes);
                 const backImage = await pdfDoc.embedJpg(backBytes);
 
-                // مقاسات عرضية متناسقة ومثالية للبطاقة المدنية داخل صفحة الـ A4
                 const cardWidth = 420;
                 const cardHeight = 420 * (frontImage.height / frontImage.width);
 
-                // رسم الوجه الأمامي بالمنتصف العلوي
-                page.drawImage(frontImage, { 
-                    x: (595.28 - cardWidth) / 2, 
-                    y: 450, 
-                    width: cardWidth, 
-                    height: cardHeight 
-                });
-
-                // رسم الوجه الخلفي بالمنتصف السفلي
-                page.drawImage(backImage, { 
-                    x: (595.28 - cardWidth) / 2, 
-                    y: 150, 
-                    width: cardWidth, 
-                    height: cardHeight 
-                });
+                page.drawImage(frontImage, { x: (595.28 - cardWidth) / 2, y: 450, width: cardWidth, height: cardHeight });
+                page.drawImage(backImage, { x: (595.28 - cardWidth) / 2, y: 150, width: cardWidth, height: cardHeight });
 
                 const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = 'Civil_ID_Card_' + Date.now() + '.pdf';
+                link.download = 'Civil_ID_Edited_' + Date.now() + '.pdf';
                 link.click();
 
-                alert('تم دمج البطاقة المدنية بدقة عالية وتحميل الملف بنجاح!');
+                alert('تم دمج البطاقة المعدلة وتحميل ملف الـ PDF بنجاح!');
             } catch (err) {
                 console.error(err);
-                alert('حدث خطأ أثناء دمج البطاقة.');
+                alert('حدث خطأ أثناء الدمج.');
             } finally {
                 generatePdfBtn.disabled = false;
                 generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة في ملف PDF وتحميله';
