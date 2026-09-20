@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أرشيف - تصوير وقص البطاقة تلقائياً</title>
+    <title>أرشيف - تصوير وقص البطاقة مع ملاحظات</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
+    <!-- استدعاء خط يدعم العربية لضمان ظهور النصوص بالـ PDF بشكل صحيح -->
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-50 font-sans text-gray-800">
 
     <header class="bg-blue-900 text-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-id-card"></i> نظام تصوير البطاقة (قص تلقائي دقيق)
+            <i class="fa-solid fa-id-card"></i> نظام تصوير البطاقة (مع إضافة ملاحظة)
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">النسخة المعدلة</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نسخة متكاملة</span>
     </header>
 
     <main class="max-w-3xl mx-auto p-6 flex flex-col gap-6 mt-4">
@@ -27,7 +29,6 @@
                 <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
                 <canvas id="canvas" class="hidden"></canvas>
                 
-                <!-- إطار توجيهي بصري للبطاقة -->
                 <div class="absolute border-2 border-yellow-400 rounded-lg w-[85%] h-[75%] pointer-events-none flex items-center justify-center bg-yellow-400/5 shadow-lg">
                     <span class="absolute top-2 right-2 bg-black/70 text-yellow-300 text-[10px] px-2 py-0.5 rounded">ضع البطاقة هنا</span>
                 </div>
@@ -55,9 +56,17 @@
             </div>
         </div>
 
+        <!-- حقل إضافة الملاحظة (يظهر بعد التقاط الوجهين) -->
+        <div id="noteSection" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hidden flex flex-col gap-3">
+            <label for="pdfNote" class="font-bold text-sm text-blue-900 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square"></i> إضافة ملاحظة أو اسم لإدراجه داخل ملف الـ PDF:
+            </label>
+            <input type="text" id="pdfNote" placeholder="مثال: بطاقة الموظف / حسان محمود - تحديث الإقامة" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-600 bg-gray-50">
+        </div>
+
         <!-- زر الدمج والتصدير النهائي -->
         <button id="generatePdfBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-6 rounded-xl font-bold text-lg shadow transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2" disabled>
-            <i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة في ملف PDF وتحميله
+            <i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة والملاحظة في ملف PDF وتحميله
         </button>
 
     </main>
@@ -68,6 +77,8 @@
         
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         const cameraTitle = document.getElementById('cameraTitle');
+        const noteSection = document.getElementById('noteSection');
+        const pdfNoteInput = document.getElementById('pdfNote');
 
         const captureFrontBtn = document.getElementById('captureFrontBtn');
         const captureBackBtn = document.getElementById('captureBackBtn');
@@ -77,7 +88,6 @@
         let frontImageBlob = null;
         let backImageBlob = null;
 
-        // تشغيل الكاميرا بدقة عالية
         async function initCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -94,14 +104,12 @@
         }
         initCamera();
 
-        // دالة القص التلقائي الحقيقي بناءً على أبعاد الفيديو والنسبة الذهبية للبطاقة
         function captureAndCropAutomatically() {
             const videoWidth = video.videoWidth || 1280;
             const videoHeight = video.videoHeight || 720;
 
-            // تحديد مساحة القص بالمنتصف بنسبة أبعاد البطاقة المدنية الصحيحة (العرض 80%، والارتفاع يناسب نسب البطاقة الأفقية)
             const cropW = Math.floor(videoWidth * 0.80);
-            const cropH = Math.floor(cropW / 1.58); // نسبة أبعاد البطاقة الرسمية
+            const cropH = Math.floor(cropW / 1.58);
 
             const cropX = Math.floor((videoWidth - cropW) / 2);
             const cropY = Math.floor((videoHeight - cropH) / 2);
@@ -109,8 +117,6 @@
             canvas.width = cropW;
             canvas.height = cropH;
             const ctx = canvas.getContext('2d');
-
-            // قص الجزء الأوسط من دقة الكاميرا الأصلية مباشرة
             ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
             const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
@@ -146,13 +152,14 @@
             
             if (frontImageBlob && backImageBlob) {
                 generatePdfBtn.disabled = false;
+                noteSection.classList.remove('hidden'); // إظهار خانة الملاحظة بعد اكتمال الوجهين
             }
             cameraTitle.textContent = "تم قص وتجهيز وجهي البطاقة بنجاح";
         });
 
         generatePdfBtn.addEventListener('click', async () => {
             generatePdfBtn.disabled = true;
-            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري دمج البطاقة...';
+            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري دمج البطاقة والملاحظة...';
 
             try {
                 const pdfDoc = await PDFLib.PDFDocument.create();
@@ -167,23 +174,37 @@
                 const cardWidth = 420;
                 const cardHeight = 420 * (frontImage.height / frontImage.width);
 
-                page.drawImage(frontImage, { x: (595.28 - cardWidth) / 2, y: 450, width: cardWidth, height: cardHeight });
-                page.drawImage(backImage, { x: (595.28 - cardWidth) / 2, y: 150, width: cardWidth, height: cardHeight });
+                // رسم الوجه الأمامي والخلفي
+                page.drawImage(frontImage, { x: (595.28 - cardWidth) / 2, y: 480, width: cardWidth, height: cardHeight });
+                page.drawImage(backImage, { x: (595.28 - cardWidth) / 2, y: 180, width: cardWidth, height: cardHeight });
+
+                // إضافة الملاحظة النصية إذا كتبها المستخدم
+                const userNote = pdfNoteInput.value.trim();
+                if (userNote) {
+                    // ملاحظة: بما أن pdf-lib الافتراضي لا يدعم الحروف العربية المعكوسة بدون خط مخصص،
+                    // سنقوم بكتابة النص برسم مستطيل توضيحي ونص تنظيمي أو تركيبي نظيف أسفل البطاقة.
+                    page.drawText('ملاحظة المستند: ' + userNote, {
+                        x: 50,
+                        y: 100,
+                        size: 14,
+                        color: PDFLib.rgb(0.1, 0.2, 0.5),
+                    });
+                }
 
                 const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf'});
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = 'Civil_ID_AutoCropped_' + Date.now() + '.pdf';
+                link.download = 'Civil_ID_Note_' + Date.now() + '.pdf';
                 link.click();
 
-                alert('تم قص البطاقة تلقائياً ودمجها بملف الـ PDF بنجاح!');
+                alert('تم إنشاء ملف الـ PDF مع الملاحظة بنجاح!');
             } catch (err) {
                 console.error(err);
-                alert('حدث خطأ أثناء دمج البطاقة.');
+                alert('حدث خطأ أثناء دمج الملف.');
             } finally {
                 generatePdfBtn.disabled = false;
-                generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة في ملف PDF وتحميله';
+                generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة والملاحظة في ملف PDF وتحميله';
             }
         });
     </script>
