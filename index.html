@@ -3,70 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أرشيف - تصوير وقص البطاقة مع ملاحظات</title>
+    <title>منصة أرشيف - البطاقة والمستندات المتعددة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
-    <!-- استدعاء خط يدعم العربية لضمان ظهور النصوص بالـ PDF بشكل صحيح -->
-    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-50 font-sans text-gray-800">
 
     <header class="bg-blue-900 text-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-id-card"></i> نظام تصوير البطاقة (مع إضافة ملاحظة)
+            <i class="fa-solid fa-folder-open"></i> منصة أرشيف المستندات والبطاقات
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نسخة متكاملة</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نسخة متطورة</span>
     </header>
 
     <main class="max-w-3xl mx-auto p-6 flex flex-col gap-6 mt-4">
+
+        <!-- أزرار اختيار وضع العمل -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-center gap-4">
+            <button id="modeCivilBtn" onclick="switchMode('civil')" class="px-5 py-2.5 rounded-lg font-bold text-sm bg-blue-600 text-white transition shadow-sm">
+                <i class="fa-solid fa-id-card ml-1"></i> وضع البطاقة المدنية (وجهين)
+            </button>
+            <button id="modeDocsBtn" onclick="switchMode('docs')" class="px-5 py-2.5 rounded-lg font-bold text-sm bg-gray-200 text-gray-700 transition shadow-sm">
+                <i class="fa-solid fa-file-lines ml-1"></i> وضع المستندات (صفحات متعددة)
+            </button>
+        </div>
 
         <!-- قسم الكاميرا -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col items-center">
             <h2 id="cameraTitle" class="font-bold text-lg text-blue-900 mb-3 w-full text-right border-b pb-2">تصوير الوجه الأمامي للبطاقة</h2>
             
-            <div class="w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[16/10] flex items-center justify-center border-2 border-blue-900 shadow-inner">
+            <!-- إطار الكاميرا (يتبدل تلقائياً حسب الوضع: عرضي للبطاقة، طولي للمستندات) -->
+            <div id="cameraContainer" class="w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[16/10] flex items-center justify-center border-2 border-blue-900 shadow-inner transition-all duration-300">
                 <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
                 <canvas id="canvas" class="hidden"></canvas>
                 
-                <div class="absolute border-2 border-yellow-400 rounded-lg w-[85%] h-[75%] pointer-events-none flex items-center justify-center bg-yellow-400/5 shadow-lg">
-                    <span class="absolute top-2 right-2 bg-black/70 text-yellow-300 text-[10px] px-2 py-0.5 rounded">ضع البطاقة هنا</span>
+                <!-- الإطار التوجيهي -->
+                <div id="guideFrame" class="absolute border-2 border-yellow-400 rounded-lg w-[85%] h-[75%] pointer-events-none flex items-center justify-center bg-yellow-400/5 shadow-lg">
+                    <span id="guideText" class="absolute top-2 right-2 bg-black/70 text-yellow-300 text-[10px] px-2 py-0.5 rounded">ضع البطاقة هنا</span>
                 </div>
             </div>
 
-            <div class="flex gap-4 mt-4 w-full max-w-lg">
+            <!-- أزرار وضع البطاقة المدنية -->
+            <div id="civilControls" class="flex gap-4 mt-4 w-full max-w-lg">
                 <button id="captureFrontBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-bold transition shadow flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-camera"></i> التقاط الأمامي تلقائياً
+                    <i class="fa-solid fa-camera"></i> التقاط الأمامي
                 </button>
                 <button id="captureBackBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg font-bold transition shadow flex items-center justify-center gap-2" disabled>
-                    <i class="fa-solid fa-camera-rotate"></i> التقاط الخلفي تلقائياً
+                    <i class="fa-solid fa-camera-rotate"></i> التقاط الخلفي
+                </button>
+            </div>
+
+            <!-- أزرار وضع المستندات المتعددة -->
+            <div id="docsControls" class="flex gap-4 mt-4 w-full max-w-lg hidden">
+                <button id="capturePageBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg font-bold transition shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i> التقاط صفحة جديدة للمستند
                 </button>
             </div>
         </div>
 
-        <!-- معاينة الصور الملتقطة -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="border rounded-xl p-3 flex flex-col items-center bg-gray-50">
-                <p class="text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-image text-blue-600 ml-1"></i> الوجه الأمامي (المقصوص)</p>
-                <div id="frontPreview" class="text-gray-400 text-xs text-center py-6">لم يتم الالتقاط بعد</div>
+        <!-- قسم المعاينة للملفات الملتقطة -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة حالياً:</h3>
+            <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <p class="text-xs text-gray-400 col-span-full text-center py-4">لم يتم التقاط أي صور بعد</p>
             </div>
-            <div class="border rounded-xl p-3 flex flex-col items-center bg-gray-50">
-                <p class="text-xs font-bold text-gray-700 mb-2"><i class="fa-solid fa-image text-indigo-600 ml-1"></i> الوجه الخلفي (المقصوص)</p>
-                <div id="backPreview" class="text-gray-400 text-xs text-center py-6">لم يتم الالتقاط بعد</div>
-            </div>
-        </div>
-
-        <!-- حقل إضافة الملاحظة (يظهر بعد التقاط الوجهين) -->
-        <div id="noteSection" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hidden flex flex-col gap-3">
-            <label for="pdfNote" class="font-bold text-sm text-blue-900 flex items-center gap-2">
-                <i class="fa-solid fa-pen-to-square"></i> إضافة ملاحظة أو اسم لإدراجه داخل ملف الـ PDF:
-            </label>
-            <input type="text" id="pdfNote" placeholder="مثال: بطاقة الموظف / حسان محمود - تحديث الإقامة" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-600 bg-gray-50">
         </div>
 
         <!-- زر الدمج والتصدير النهائي -->
         <button id="generatePdfBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-6 rounded-xl font-bold text-lg shadow transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2" disabled>
-            <i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة والملاحظة في ملف PDF وتحميله
+            <i class="fa-solid fa-file-pdf"></i> دمج وتصدير الكل إلى ملف PDF وتحميله
         </button>
 
     </main>
@@ -74,20 +80,27 @@
     <script>
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const guideFrame = document.getElementById('guideFrame');
+        const guideText = document.getElementById('guideText');
         
-        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const modeCivilBtn = document.getElementById('modeCivilBtn');
+        const modeDocsBtn = document.getElementById('modeDocsBtn');
+        const civilControls = document.getElementById('civilControls');
+        const docsControls = document.getElementById('docsControls');
         const cameraTitle = document.getElementById('cameraTitle');
-        const noteSection = document.getElementById('noteSection');
-        const pdfNoteInput = document.getElementById('pdfNote');
-
+        
         const captureFrontBtn = document.getElementById('captureFrontBtn');
         const captureBackBtn = document.getElementById('captureBackBtn');
-        const frontPreview = document.getElementById('frontPreview');
-        const backPreview = document.getElementById('backPreview');
+        const capturePageBtn = document.getElementById('capturePageBtn');
+        const previewContainer = document.getElementById('previewContainer');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
 
-        let frontImageBlob = null;
-        let backImageBlob = null;
+        let currentMode = 'civil'; // 'civil' أو 'docs'
+        let civilImages = { front: null, back: null };
+        let multiPages = []; // لتخزين صفحات المستندات المتعددة
 
+        // تشغيل الكاميرا بدقة عالية
         async function initCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -104,13 +117,45 @@
         }
         initCamera();
 
-        function captureAndCropAutomatically() {
+        // تبديل الأوضاع (بطاقة مدنية / مستندات متعددة)
+        function switchMode(mode) {
+            currentMode = mode;
+            civilImages = { front: null, back: null };
+            multiPages = [];
+            updatePreviewUI();
+            generatePdfBtn.disabled = true;
+
+            if (mode === 'civil') {
+                modeCivilBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-blue-600 text-white transition shadow-sm";
+                modeDocsBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-gray-200 text-gray-700 transition shadow-sm";
+                civilControls.classList.remove('hidden');
+                docsControls.classList.add('hidden');
+                cameraContainer.className = "w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[16/10] flex items-center justify-center border-2 border-blue-900 shadow-inner transition-all duration-300";
+                guideFrame.className = "absolute border-2 border-yellow-400 rounded-lg w-[85%] h-[75%] pointer-events-none flex items-center justify-center bg-yellow-400/5 shadow-lg";
+                guideText.textContent = "ضع البطاقة هنا";
+                cameraTitle.textContent = "تصوير الوجه الأمامي للبطاقة";
+                captureFrontBtn.disabled = false;
+                captureFrontBtn.innerHTML = '<i class="fa-solid fa-camera"></i> التقاط الأمامي';
+                captureBackBtn.disabled = true;
+                captureBackBtn.innerHTML = '<i class="fa-solid fa-camera-rotate"></i> التقاط الخلفي';
+            } else {
+                modeDocsBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-emerald-600 text-white transition shadow-sm";
+                modeCivilBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-gray-200 text-gray-700 transition shadow-sm";
+                docsControls.classList.remove('hidden');
+                civilControls.classList.add('hidden');
+                cameraContainer.className = "w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[3/4] flex items-center justify-center border-2 border-emerald-700 shadow-inner transition-all duration-300";
+                guideFrame.className = "absolute border-2 border-emerald-400 rounded-lg w-[90%] h-[90%] pointer-events-none flex items-center justify-center bg-emerald-400/5 shadow-lg";
+                guideText.textContent = "ضع المستند الطولي هنا";
+                cameraTitle.textContent = "التقاط صفحات المستند (متعدد الصفحات)";
+            }
+        }
+
+        // دالة القص التلقائي للبطاقة (أفقي)
+        function captureCivilCard() {
             const videoWidth = video.videoWidth || 1280;
             const videoHeight = video.videoHeight || 720;
-
             const cropW = Math.floor(videoWidth * 0.80);
             const cropH = Math.floor(cropW / 1.58);
-
             const cropX = Math.floor((videoWidth - cropW) / 2);
             const cropY = Math.floor((videoHeight - cropH) / 2);
 
@@ -119,92 +164,149 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
+            return createBlobAndDataUrl();
+        }
+
+        // دالة التقاط المستند العام (بالطول مع قص ذكي متناسق)
+        function captureDocumentPage() {
+            const videoWidth = video.videoWidth || 1280;
+            const videoHeight = video.videoHeight || 720;
+            const cropW = Math.floor(videoWidth * 0.90);
+            const cropH = Math.floor(videoHeight * 0.90);
+            const cropX = Math.floor((videoWidth - cropW) / 2);
+            const cropY = Math.floor((videoHeight - cropH) / 2);
+
+            canvas.width = cropW;
+            canvas.height = cropH;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+            return createBlobAndDataUrl();
+        }
+
+        function createBlobAndDataUrl() {
             const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-            
             const arr = dataUrl.split(',');
             const mime = arr[0].match(/:(.*?);/)[1];
             const bstr = atob(arr[1]);
             let n = bstr.length;
             const u8arr = new Uint8Array(n);
             while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-            
             return { blob: new Blob([u8arr], {type: mime}), dataUrl };
         }
 
+        // أحداث أزرار التقاط البطاقة
         captureFrontBtn.addEventListener('click', () => {
-            const res = captureAndCropAutomatically();
-            frontImageBlob = res.blob;
-            frontPreview.innerHTML = `<img src="${res.dataUrl}" class="h-28 object-contain rounded shadow border">`;
-            
-            captureFrontBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم التقاط الأمامي';
+            const res = captureCivilCard();
+            civilImages.front = res.blob;
+            updatePreviewUI();
+            captureFrontBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم الأمامي';
             captureFrontBtn.classList.replace('bg-blue-600', 'bg-green-600');
             captureBackBtn.disabled = false;
             cameraTitle.textContent = "تصوير الوجه الخلفي للبطاقة";
         });
 
         captureBackBtn.addEventListener('click', () => {
-            const res = captureAndCropAutomatically();
-            backImageBlob = res.blob;
-            backPreview.innerHTML = `<img src="${res.dataUrl}" class="h-28 object-contain rounded shadow border">`;
-            
-            captureBackBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم التقاط الخلفي';
+            const res = captureCivilCard();
+            civilImages.back = res.blob;
+            updatePreviewUI();
+            captureBackBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم الخلفي';
             captureBackBtn.classList.replace('bg-indigo-600', 'bg-green-600');
-            
-            if (frontImageBlob && backImageBlob) {
-                generatePdfBtn.disabled = false;
-                noteSection.classList.remove('hidden'); // إظهار خانة الملاحظة بعد اكتمال الوجهين
-            }
-            cameraTitle.textContent = "تم قص وتجهيز وجهي البطاقة بنجاح";
+            if (civilImages.front && civilImages.back) generatePdfBtn.disabled = false;
+            cameraTitle.textContent = "تم تجهيز وجهي البطاقة بنجاح";
         });
 
+        // حدث التقاط صفحة للمستندات المتعددة
+        capturePageBtn.addEventListener('click', () => {
+            const res = captureDocumentPage();
+            multiPages.push(res.blob);
+            updatePreviewUI();
+            generatePdfBtn.disabled = false;
+        });
+
+        // تحديث واجهة المعاينة
+        function updatePreviewUI() {
+            previewContainer.innerHTML = '';
+            if (currentMode === 'civil') {
+                if (civilImages.front) appendPreview('الوجه الأمامي', URL.createObjectURL(civilImages.front));
+                if (civilImages.back) appendPreview('الوجه الخلفي', URL.createObjectURL(civilImages.back));
+                if (!civilImages.front && !civilImages.back) {
+                    previewContainer.innerHTML = '<p class="text-xs text-gray-400 col-span-full text-center py-4">لم يتم التقاط أي صور للبطاقة بعد</p>';
+                }
+            } else {
+                if (multiPages.length === 0) {
+                    previewContainer.innerHTML = '<p class="text-xs text-gray-400 col-span-full text-center py-4">لم يتم التقاط أي صفحات للمستند بعد</p>';
+                } else {
+                    multiPages.forEach((blob, idx) => {
+                        appendPreview(`صفحة (${idx + 1})`, URL.createObjectURL(blob));
+                    });
+                }
+            }
+        }
+
+        function appendPreview(label, url) {
+            const div = document.createElement('div');
+            div.className = 'border rounded-lg p-2 flex flex-col items-center bg-gray-50';
+            div.innerHTML = `
+                <span class="text-xs font-bold text-gray-600 mb-1">${label}</span>
+                <img src="${url}" class="h-28 object-contain rounded shadow border">
+            `;
+            previewContainer.appendChild(div);
+        }
+
+        // زر التصدير والدمج النهائي للـ PDF
         generatePdfBtn.addEventListener('click', async () => {
             generatePdfBtn.disabled = true;
-            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري دمج البطاقة والملاحظة...';
+            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري إنشاء ملف الـ PDF...';
 
             try {
                 const pdfDoc = await PDFLib.PDFDocument.create();
-                const page = pdfDoc.addPage([595.28, 841.89]);
 
-                const frontBytes = await frontImageBlob.arrayBuffer();
-                const backBytes = await backImageBlob.arrayBuffer();
+                if (currentMode === 'civil') {
+                    const page = pdfDoc.addPage([595.28, 841.89]); // A4
+                    const frontBytes = await civilImages.front.arrayBuffer();
+                    const backBytes = await civilImages.back.arrayBuffer();
 
-                const frontImage = await pdfDoc.embedJpg(frontBytes);
-                const backImage = await pdfDoc.embedJpg(backBytes);
+                    const frontImage = await pdfDoc.embedJpg(frontBytes);
+                    const backImage = await pdfDoc.embedJpg(backBytes);
 
-                const cardWidth = 420;
-                const cardHeight = 420 * (frontImage.height / frontImage.width);
+                    const cardWidth = 420;
+                    const cardHeight = 420 * (frontImage.height / frontImage.width);
 
-                // رسم الوجه الأمامي والخلفي
-                page.drawImage(frontImage, { x: (595.28 - cardWidth) / 2, y: 480, width: cardWidth, height: cardHeight });
-                page.drawImage(backImage, { x: (595.28 - cardWidth) / 2, y: 180, width: cardWidth, height: cardHeight });
+                    page.drawImage(frontImage, { x: (595.28 - cardWidth) / 2, y: 480, width: cardWidth, height: cardHeight });
+                    page.drawImage(backImage, { x: (595.28 - cardWidth) / 2, y: 180, width: cardWidth, height: cardHeight });
+                } else {
+                    // وضع المستندات المتعددة: كل صفحة تأخذ صفحة A4 مستقلة
+                    for (let blob of multiPages) {
+                        const page = pdfDoc.addPage([595.28, 841.89]);
+                        const imgBytes = await blob.arrayBuffer();
+                        const img = await pdfDoc.embedJpg(imgBytes);
 
-                // إضافة الملاحظة النصية إذا كتبها المستخدم
-                const userNote = pdfNoteInput.value.trim();
-                if (userNote) {
-                    // ملاحظة: بما أن pdf-lib الافتراضي لا يدعم الحروف العربية المعكوسة بدون خط مخصص،
-                    // سنقوم بكتابة النص برسم مستطيل توضيحي ونص تنظيمي أو تركيبي نظيف أسفل البطاقة.
-                    page.drawText('ملاحظة المستند: ' + userNote, {
-                        x: 50,
-                        y: 100,
-                        size: 14,
-                        color: PDFLib.rgb(0.1, 0.2, 0.5),
-                    });
+                        const imgWidth = 495;
+                        const imgHeight = 495 * (img.height / img.width);
+                        page.drawImage(img, { 
+                            x: (595.28 - imgWidth) / 2, 
+                            y: (841.89 - imgHeight) / 2, 
+                            width: imgWidth, 
+                            height: imgHeight 
+                        });
+                    }
                 }
 
                 const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf'});
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = 'Civil_ID_Note_' + Date.now() + '.pdf';
+                link.download = (currentMode === 'civil' ? 'Civil_ID_' : 'Document_Scan_') + Date.now() + '.pdf';
                 link.click();
 
-                alert('تم إنشاء ملف الـ PDF مع الملاحظة بنجاح!');
+                alert('تم إنشاء ملف الـ PDF وتحميله بنجاح!');
             } catch (err) {
                 console.error(err);
-                alert('حدث خطأ أثناء دمج الملف.');
+                alert('حدث خطأ أثناء دمج الملفات.');
             } finally {
                 generatePdfBtn.disabled = false;
-                generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> دمج وجهي البطاقة والملاحظة في ملف PDF وتحميله';
+                generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> دمج وتصدير الكل إلى ملف PDF وتحميله';
             }
         });
     </script>
