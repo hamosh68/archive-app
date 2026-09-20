@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أرشيف - تصوير وتعديل البطاقة المدنية</title>
+    <title>أرشيف - تصوير وتعديل وقص البطاقة المدنية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,9 +12,9 @@
 
     <header class="bg-blue-900 text-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-id-card"></i> نظام تصوير وتعديل البطاقة المدنية
+            <i class="fa-solid fa-id-card"></i> نظام تصوير وقص البطاقة المدنية
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">مع محرر الصور</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">مع محرر القص والتحسين</span>
     </header>
 
     <main class="max-w-3xl mx-auto p-6 flex flex-col gap-6 mt-4">
@@ -41,18 +41,41 @@
             </div>
         </div>
 
-        <!-- قسم التعديل المؤقت (مخفي حتى يتم الالتقاط) -->
+        <!-- قسم التعديل والقص (مخفي حتى يتم الالتقاط) -->
         <div id="editorSection" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hidden flex flex-col gap-4">
             <h2 class="font-bold text-lg text-blue-900 border-b pb-2 flex justify-between items-center">
-                <span>محرر وتحسين الصورة الملتقطة</span>
+                <span>محرر القص وتحسين الصورة</span>
                 <span id="editingTargetLabel" class="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full"></span>
             </h2>
             
-            <div class="flex flex-col items-center bg-gray-900 p-3 rounded-lg">
-                <canvas id="editCanvas" class="max-h-64 object-contain rounded shadow border border-gray-700"></canvas>
+            <div class="flex flex-col items-center bg-gray-900 p-3 rounded-lg overflow-x-auto">
+                <canvas id="editCanvas" class="max-h-72 object-contain rounded shadow border border-gray-700"></canvas>
             </div>
 
-            <!-- أدوات التعديل والإضاءة والفلتر -->
+            <!-- أدوات القص (تحديد أبعاد الإطار المطلوب) -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 class="text-xs font-bold text-blue-900 mb-3"><i class="fa-solid fa-crop ml-1"></i> أداة قص أطراف الصورة (اختر الحدود بالمقاس المناسب للبطاقة):</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">قص من اليمين/اليسار (X): <span id="cropXVal">0</span>px</label>
+                        <input type="range" id="cropX" min="0" max="300" value="0" class="w-full cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">قص من الأعلى (Y): <span id="cropYVal">0</span>px</label>
+                        <input type="range" id="cropY" min="0" max="300" value="0" class="w-full cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">عرض الصورة (Width):</label>
+                        <input type="range" id="cropWidth" min="200" max="1500" value="1000" class="w-full cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-700 mb-1">ارتفاع الصورة (Height):</label>
+                        <input type="range" id="cropHeight" min="150" max="1000" value="650" class="w-full cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- أدوات السطوع والتباين -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">السطوع (Brightness): <span id="brightnessVal">100</span>%</label>
@@ -66,7 +89,7 @@
 
             <div class="flex gap-3">
                 <button id="applyEditBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-bold transition shadow flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-check"></i> اعتماد الصورة وتثبيتها
+                    <i class="fa-solid fa-check"></i> اعتماد القص والتحسين
                 </button>
                 <button id="cancelEditBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2.5 rounded-lg font-medium transition">
                     إعادة التقاط
@@ -101,6 +124,14 @@
         const editorSection = document.getElementById('editorSection');
         const editingTargetLabel = document.getElementById('editingTargetLabel');
         
+        // عناصر التحكم بالقص والإضاءة
+        const cropX = document.getElementById('cropX');
+        const cropY = document.getElementById('cropY');
+        const cropWidth = document.getElementById('cropWidth');
+        const cropHeight = document.getElementById('cropHeight');
+        const cropXVal = document.getElementById('cropXVal');
+        const cropYVal = document.getElementById('cropYVal');
+
         const brightnessRange = document.getElementById('brightnessRange');
         const contrastRange = document.getElementById('contrastRange');
         const brightnessVal = document.getElementById('brightnessVal');
@@ -116,12 +147,11 @@
         const frontPreview = document.getElementById('frontPreview');
         const backPreview = document.getElementById('backPreview');
 
-        let currentEditingType = ''; // 'front' أو 'back'
+        let currentEditingType = '';
         let rawImageObj = null;
         let frontImageBlob = null;
         let backImageBlob = null;
 
-        // تشغيل الكاميرا
         async function initCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -138,10 +168,9 @@
         }
         initCamera();
 
-        // التقاط الصورة مبدئياً وفتح محرر التعديل
         function captureAndOpenEditor(type) {
             currentEditingType = type;
-            editingTargetLabel.textContent = type === 'front' ? 'تعديل الوجه الأمامي' : 'تعديل الوجه الخلفي';
+            editingTargetLabel.textContent = type === 'front' ? 'قص وتحسين الوجه الأمامي' : 'قص وتحسين الوجه الخلفي';
 
             const videoWidth = video.videoWidth || 1280;
             const videoHeight = video.videoHeight || 720;
@@ -154,6 +183,19 @@
             rawImageObj = new Image();
             rawImageObj.src = canvas.toDataURL('image/jpeg', 0.95);
             rawImageObj.onload = () => {
+                // ضبط القيم الافتراضية لأدوات القص بناءً على أبعاد الصورة الملتقطة
+                cropWidth.max = rawImageObj.width;
+                cropHeight.max = rawImageObj.height;
+                cropWidth.value = Math.floor(rawImageObj.width * 0.85);
+                cropHeight.value = Math.floor(rawImageObj.height * 0.75);
+                cropX.max = rawImageObj.width - 100;
+                cropY.max = rawImageObj.height - 100;
+                cropX.value = Math.floor((rawImageObj.width - parseInt(cropWidth.value)) / 2);
+                cropY.value = Math.floor((rawImageObj.height - parseInt(cropHeight.value)) / 2);
+
+                cropXVal.textContent = cropX.value;
+                cropYVal.textContent = cropY.value;
+
                 resetSliders();
                 drawEditedImage();
                 cameraSection.classList.add('hidden');
@@ -161,16 +203,32 @@
             };
         }
 
-        // رسم الصورة مع تعديلات السطوع والتباين
+        // رسم الصورة مع تطبيق أداة القص (Crop) والسطوع والتباين
         function drawEditedImage() {
             if (!rawImageObj) return;
-            editCanvas.width = rawImageObj.width;
-            editCanvas.height = rawImageObj.height;
+
+            const x = parseInt(cropX.value);
+            const y = parseInt(cropY.value);
+            const w = parseInt(cropWidth.value);
+            const h = parseInt(cropHeight.value);
+
+            editCanvas.width = w;
+            editCanvas.height = h;
             const ctx = editCanvas.getContext('2d');
 
             ctx.filter = `brightness(${brightnessRange.value}%) contrast(${contrastRange.value}%)`;
-            ctx.drawImage(rawImageObj, 0, 0);
+            // رسم الجزء المحدد فقط من الصورة الأصلية (القص)
+            ctx.drawImage(rawImageObj, x, y, w, h, 0, 0, w, h);
         }
+
+        // تحديث الرسم عند تحريك أي مؤشر (قص، إضاءة، تباين)
+        [cropX, cropY, cropWidth, cropHeight].forEach(input => {
+            input.addEventListener('input', () => {
+                cropXVal.textContent = cropX.value;
+                cropYVal.textContent = cropY.value;
+                drawEditedImage();
+            });
+        });
 
         brightnessRange.addEventListener('input', () => {
             brightnessVal.textContent = brightnessRange.value;
@@ -189,21 +247,17 @@
             contrastVal.textContent = '100';
         }
 
-        // أزرار الالتقاط
         captureFrontBtn.addEventListener('click', () => captureAndOpenEditor('front'));
         captureBackBtn.addEventListener('click', () => captureAndOpenEditor('back'));
 
-        // إلغاء التعديل والعودة للكاميرا
         cancelEditBtn.addEventListener('click', () => {
             editorSection.classList.add('hidden');
             cameraSection.classList.remove('hidden');
         });
 
-        // اعتماد التعديل وتحويلها لـ Blob
         applyEditBtn.addEventListener('click', () => {
             const dataUrl = editCanvas.toDataURL('image/jpeg', 0.95);
             
-            // تحويل لـ Blob
             const arr = dataUrl.split(',');
             const mime = arr[0].match(/:(.*?);/)[1];
             const bstr = atob(arr[1]);
@@ -215,16 +269,16 @@
             if (currentEditingType === 'front') {
                 frontImageBlob = blob;
                 frontPreview.innerHTML = `<img src="${dataUrl}" class="h-32 object-contain rounded shadow border">`;
-                captureFrontBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم تعديل الأمامي';
+                captureFrontBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم قص وتعديل الأمامي';
                 captureFrontBtn.classList.replace('bg-blue-600', 'bg-green-600');
                 captureBackBtn.disabled = false;
                 cameraTitle.textContent = "تصوير الوجه الخلفي للبطاقة";
             } else {
                 backImageBlob = blob;
                 backPreview.innerHTML = `<img src="${dataUrl}" class="h-32 object-contain rounded shadow border">`;
-                captureBackBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم تعديل الخلفي';
+                captureBackBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم قص وتعديل الخلفي';
                 captureBackBtn.classList.replace('bg-indigo-600', 'bg-green-600');
-                cameraTitle.textContent = "تم تجهيز وجهي البطاقة بنجاح";
+                cameraTitle.textContent = "تم تجهيز وقص وجهي البطاقة بنجاح";
             }
 
             if (frontImageBlob && backImageBlob) {
@@ -235,7 +289,6 @@
             cameraSection.classList.remove('hidden');
         });
 
-        // دمج PDF
         generatePdfBtn.addEventListener('click', async () => {
             generatePdfBtn.disabled = true;
             generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري دمج البطاقة...';
@@ -260,10 +313,10 @@
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = 'Civil_ID_Edited_' + Date.now() + '.pdf';
+                link.download = 'Civil_ID_Cropped_' + Date.now() + '.pdf';
                 link.click();
 
-                alert('تم دمج البطاقة المعدلة وتحميل ملف الـ PDF بنجاح!');
+                alert('تم دمج البطاقة القصّة وتحميل ملف الـ PDF بنجاح!');
             } catch (err) {
                 console.error(err);
                 alert('حدث خطأ أثناء الدمج.');
