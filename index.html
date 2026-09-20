@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أرشيف رصد - النسخة الإدارية المتكاملة</title>
+    <title>منصة أرشيف رصد - النظام الشامل والذكي</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,33 +12,36 @@
 
     <header class="bg-blue-900 text-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-folder-tree"></i> منصة أرشيف رصد (الإصدار الذكي)
+            <i class="fa-solid fa-folder-tree"></i> منصة أرشيف رصد (الإصدار الشامل)
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نظام إداري متكامل</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">تصوير، رفع، ودمج PDF</span>
     </header>
 
     <main class="max-w-4xl mx-auto p-6 flex flex-col gap-6 mt-4">
 
         <!-- أزرار اختيار وضع العمل -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-center gap-4">
-            <button id="modeCivilBtn" onclick="switchMode('civil')" class="px-5 py-2.5 rounded-lg font-bold text-sm bg-blue-600 text-white transition shadow-sm">
-                <i class="fa-solid fa-id-card ml-1"></i> البطاقة المدنية (وجهين)
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-center gap-3">
+            <button id="modeCivilBtn" onclick="switchMode('civil')" class="px-4 py-2 rounded-lg font-bold text-xs bg-blue-600 text-white transition shadow-sm">
+                <i class="fa-solid fa-id-card ml-1"></i> بطاقة مدنية (كاميرا)
             </button>
-            <button id="modeDocsBtn" onclick="switchMode('docs')" class="px-5 py-2.5 rounded-lg font-bold text-sm bg-slate-200 text-slate-700 transition shadow-sm">
-                <i class="fa-solid fa-file-lines ml-1"></i> المستندات المتعددة
+            <button id="modeDocsBtn" onclick="switchMode('docs')" class="px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm">
+                <i class="fa-solid fa-file-lines ml-1"></i> مستندات متعددة (كاميرا)
+            </button>
+            <button id="modeUploadBtn" onclick="switchMode('upload')" class="px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm">
+                <i class="fa-solid fa-upload ml-1"></i> رفع صور أو ملفات PDF
             </button>
         </div>
 
-        <!-- إعدادات التسمية الذكية والفلترة والختم -->
+        <!-- إعدادات التسمية الذكية والختم -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">نوع المستند (للتسمية الذكية):</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1">نوع المستند للتسمية:</label>
                 <select id="docTypeSelect" class="w-full border rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-600 bg-slate-50 font-bold">
                     <option value="Civil_ID">بطاقة مدنية</option>
                     <option value="Residency">إقامة</option>
                     <option value="Contract">عقد عمل</option>
                     <option value="Passport">جواز سفر</option>
-                    <option value="Official_Letter">مستند رسمي / كتاب</option>
+                    <option value="Official_Letter">مستند رسمي</option>
                 </select>
             </div>
             <div>
@@ -46,21 +49,21 @@
                 <input type="text" id="docNameInput" placeholder="مثال: حسان محمود" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">العلامة المائية / الختم النصي:</label>
-                <input type="text" id="watermarkText" placeholder="مثال: ستابيلو - مطابق للأصل" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
+                <label class="block text-xs font-bold text-slate-700 mb-1">العلامة المائية / الختم:</label>
+                <input type="text" id="watermarkText" placeholder="مثال: مطابق للأصل" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
             </div>
         </div>
 
-        <!-- زر تفعيل الفلتر -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+        <!-- فلتر الأبيض والأسود (يظهر في وضع الكاميرا) -->
+        <div id="filterSection" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" id="bwFilterToggle" class="w-4 h-4 text-blue-600 rounded">
                 <span class="text-xs font-bold text-slate-700">تفعيل فلتر الماسح الضوئي (أبيض وأسود فائق الوضوح للكتابة)</span>
             </label>
         </div>
 
-        <!-- قسم الكاميرا -->
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
+        <!-- قسم الكاميرا (يظهر في الأوضاع العادية) -->
+        <div id="cameraSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
             <h2 id="cameraTitle" class="font-bold text-lg text-blue-900 mb-3 w-full text-right border-b pb-2">تصوير الوجه الأمامي للبطاقة</h2>
             
             <div id="cameraContainer" class="w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[16/10] flex items-center justify-center border-2 border-blue-900 shadow-inner transition-all duration-300">
@@ -90,11 +93,21 @@
             </div>
         </div>
 
+        <!-- قسم رفع الملفات والصور (يظهر في وضع الرفع) -->
+        <div id="uploadSection" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-4 text-center">
+            <h2 class="font-bold text-lg text-blue-900 border-b pb-2 text-right">رفع الصور أو ملفات الـ PDF الجاهزة</h2>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 gap-3">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-blue-600"></i>
+                <p class="text-xs text-slate-600">اختر صور (JPG/PNG) أو ملفات (PDF) من جهازك للدمج والأرشفة:</p>
+                <input type="file" id="fileUploader" multiple accept="image/*,application/pdf" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+            </div>
+        </div>
+
         <!-- قسم المعاينة وإدارة الصفحات (مع زر الحذف X) -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة وإدارتها:</h3>
+            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة أو المرفوعة (مع إمكانية الحذف):</h3>
             <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صور بعد</p>
+                <p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم اختيار أو التقاط أي ملفات بعد</p>
             </div>
         </div>
 
@@ -120,7 +133,7 @@
         <!-- سجل الأرشيف المحلي (History) -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
             <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2 flex justify-between items-center">
-                <span><i class="fa-solid fa-history ml-1"></i> سجل الأرشيف المحلي (آخر الملفات المؤرشفة)</span>
+                <span><i class="fa-solid fa-history ml-1"></i> سجل الأرشيف المحلي (الملفات المؤرشفة سابقاً)</span>
                 <button onclick="clearHistory()" class="text-xs text-red-600 hover:underline">مسح السجل</button>
             </h3>
             <div id="historyContainer" class="flex flex-col gap-2">
@@ -139,13 +152,20 @@
         
         const modeCivilBtn = document.getElementById('modeCivilBtn');
         const modeDocsBtn = document.getElementById('modeDocsBtn');
+        const modeUploadBtn = document.getElementById('modeUploadBtn');
+        
         const civilControls = document.getElementById('civilControls');
         const docsControls = document.getElementById('docsControls');
+        const cameraSection = document.getElementById('cameraSection');
+        const uploadSection = document.getElementById('uploadSection');
+        const filterSection = document.getElementById('filterSection');
         const cameraTitle = document.getElementById('cameraTitle');
         
         const captureFrontBtn = document.getElementById('captureFrontBtn');
         const captureBackBtn = document.getElementById('captureBackBtn');
         const capturePageBtn = document.getElementById('capturePageBtn');
+        const fileUploader = document.getElementById('fileUploader');
+        
         const previewContainer = document.getElementById('previewContainer');
         const generatePdfBtn = document.getElementById('generatePdfBtn');
         
@@ -159,9 +179,9 @@
         const downloadPdfLink = document.getElementById('downloadPdfLink');
         const historyContainer = document.getElementById('historyContainer');
 
-        let currentMode = 'civil';
+        let currentMode = 'civil'; // 'civil', 'docs', 'upload'
         let civilImages = { front: null, back: null };
-        let multiPages = [];
+        let multiPages = []; // تخزين الصور أو ملفات الـ PDF المرفوعة
 
         async function initCamera() {
             try {
@@ -173,7 +193,7 @@
                 try {
                     video.srcObject = await navigator.mediaDevices.getUserMedia({ video: true });
                 } catch (e) {
-                    alert('تعذر تشغيل الكاميرا.');
+                    console.log('الكاميرا غير متوفرة أو مرفوضة الصلاحية');
                 }
             }
         }
@@ -187,11 +207,17 @@
             generatePdfBtn.disabled = true;
             previewPdfSection.classList.add('hidden');
 
+            modeCivilBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm";
+            modeDocsBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm";
+            modeUploadBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-slate-200 text-slate-700 transition shadow-sm";
+
             if (mode === 'civil') {
-                modeCivilBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-blue-600 text-white transition shadow-sm";
-                modeDocsBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-slate-200 text-slate-700 transition shadow-sm";
+                modeCivilBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-blue-600 text-white transition shadow-sm";
                 civilControls.classList.remove('hidden');
                 docsControls.classList.add('hidden');
+                cameraSection.classList.remove('hidden');
+                uploadSection.classList.add('hidden');
+                filterSection.classList.remove('hidden');
                 cameraContainer.className = "w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[16/10] flex items-center justify-center border-2 border-blue-900 shadow-inner transition-all duration-300";
                 guideFrame.className = "absolute border-2 border-yellow-400 rounded-lg w-[85%] h-[75%] pointer-events-none flex items-center justify-center bg-yellow-400/5 shadow-lg";
                 guideText.textContent = "ضع البطاقة هنا";
@@ -200,15 +226,22 @@
                 captureFrontBtn.innerHTML = '<i class="fa-solid fa-camera"></i> التقاط الأمامي';
                 captureBackBtn.disabled = true;
                 captureBackBtn.innerHTML = '<i class="fa-solid fa-camera-rotate"></i> التقاط الخلفي';
-            } else {
-                modeDocsBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-emerald-600 text-white transition shadow-sm";
-                modeCivilBtn.className = "px-5 py-2.5 rounded-lg font-bold text-sm bg-slate-200 text-slate-700 transition shadow-sm";
+            } else if (mode === 'docs') {
+                modeDocsBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-emerald-600 text-white transition shadow-sm";
                 docsControls.classList.remove('hidden');
                 civilControls.classList.add('hidden');
+                cameraSection.classList.remove('hidden');
+                uploadSection.classList.add('hidden');
+                filterSection.classList.remove('hidden');
                 cameraContainer.className = "w-full max-w-lg bg-black rounded-lg overflow-hidden relative aspect-[3/4] flex items-center justify-center border-2 border-emerald-700 shadow-inner transition-all duration-300";
                 guideFrame.className = "absolute border-2 border-emerald-400 rounded-lg w-[90%] h-[90%] pointer-events-none flex items-center justify-center bg-emerald-400/5 shadow-lg";
                 guideText.textContent = "ضع المستند الطولي هنا";
                 cameraTitle.textContent = "التقاط صفحات المستند (متعدد الصفحات)";
+            } else if (mode === 'upload') {
+                modeUploadBtn.className = "px-4 py-2 rounded-lg font-bold text-xs bg-indigo-600 text-white transition shadow-sm";
+                cameraSection.classList.add('hidden');
+                uploadSection.classList.remove('hidden');
+                filterSection.classList.add('hidden');
             }
         }
 
@@ -238,7 +271,7 @@
             let n = bstr.length;
             const u8arr = new Uint8Array(n);
             while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-            return { blob: new Blob([u8arr], {type: mime}), dataUrl };
+            return { blob: new Blob([u8arr], {type: mime}), dataUrl, type: 'image' };
         }
 
         function captureCivilCard() {
@@ -259,7 +292,7 @@
 
         captureFrontBtn.addEventListener('click', () => {
             const res = captureCivilCard();
-            civilImages.front = res.blob;
+            civilImages.front = res;
             updatePreviewUI();
             captureFrontBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم الأمامي';
             captureFrontBtn.classList.replace('bg-blue-600', 'bg-green-600');
@@ -269,7 +302,7 @@
 
         captureBackBtn.addEventListener('click', () => {
             const res = captureCivilCard();
-            civilImages.back = res.blob;
+            civilImages.back = res;
             updatePreviewUI();
             captureBackBtn.innerHTML = '<i class="fa-solid fa-check text-green-300"></i> تم الخلفي';
             captureBackBtn.classList.replace('bg-indigo-600', 'bg-green-600');
@@ -279,9 +312,36 @@
 
         capturePageBtn.addEventListener('click', () => {
             const res = captureDocumentPage();
-            multiPages.push(res.blob);
+            multiPages.push(res);
             updatePreviewUI();
             generatePdfBtn.disabled = false;
+        });
+
+        // معالجة رفع الملفات الخارجية (صور أو PDF)
+        fileUploader.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files.length) return;
+
+            for (let file of files) {
+                if (file.type === 'application/pdf') {
+                    // إذا كان الملف PDF مرفوع
+                    const arrayBuffer = await file.arrayBuffer();
+                    multiPages.push({ blob: new Blob([arrayBuffer], {type: 'application/pdf'}), type: 'pdf', name: file.name });
+                } else if (file.type.startsWith('image/')) {
+                    // إذا كان صورة مرفوعة
+                    const dataUrl = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    const res = await fetch(dataUrl);
+                    const blob = await res.blob();
+                    multiPages.push({ blob, dataUrl, type: 'image', name: file.name });
+                }
+            }
+            updatePreviewUI();
+            generatePdfBtn.disabled = multiPages.length === 0;
+            fileUploader.value = '';
         });
 
         window.deleteItem = function(type, index) {
@@ -297,7 +357,7 @@
                 generatePdfBtn.disabled = true;
             } else if (type === 'doc') {
                 multiPages.splice(index, 1);
-                if (multiPages.length === 0) generatePdfBtn.disabled = true;
+                if (multiPages.length === 0 && currentMode === 'upload') generatePdfBtn.disabled = true;
             }
             updatePreviewUI();
             previewPdfSection.classList.add('hidden');
@@ -306,17 +366,19 @@
         function updatePreviewUI() {
             previewContainer.innerHTML = '';
             if (currentMode === 'civil') {
-                if (civilImages.front) appendPreview('الوجه الأمامي', URL.createObjectURL(civilImages.front), 'front', null);
-                if (civilImages.back) appendPreview('الوجه الخلفي', URL.createObjectURL(civilImages.back), 'back', null);
+                if (civilImages.front) appendPreview('الوجه الأمامي', civilImages.front.dataUrl, 'front', null);
+                if (civilImages.back) appendPreview('الوجه الخلفي', civilImages.back.dataUrl, 'back', null);
                 if (!civilImages.front && !civilImages.back) {
                     previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صور للبطاقة بعد</p>';
                 }
             } else {
                 if (multiPages.length === 0) {
-                    previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صفحات بعد</p>';
+                    previewContainer.innerHTML = '<p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم رفع أو التقاط أي ملفات بعد</p>';
                 } else {
-                    multiPages.forEach((blob, idx) => {
-                        appendPreview(`صفحة (${idx + 1})`, URL.createObjectURL(blob), 'doc', idx);
+                    multiPages.forEach((item, idx) => {
+                        let label = item.type === 'pdf' ? `ملف PDF: ${item.name}` : `صفحة (${idx + 1})`;
+                        let previewSrc = item.type === 'pdf' ? 'https://cdn-icons-png.flaticon.com/512/337/337946.png' : item.dataUrl;
+                        appendPreview(label, previewSrc, 'doc', idx);
                     });
                 }
             }
@@ -326,26 +388,25 @@
             const div = document.createElement('div');
             div.className = 'border rounded-lg p-2 flex flex-col items-center bg-slate-50 relative shadow-sm';
             let deleteParam = type === 'doc' ? `'doc', ${index}` : `'${type}', null`;
-            let deleteBtnHtml = `<button onclick="deleteItem(${deleteParam})" class="absolute top-1 left-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow hover:bg-red-700 transition" title="حذف الصورة"><i class="fa-solid fa-xmark"></i></button>`;
+            let deleteBtnHtml = `<button onclick="deleteItem(${deleteParam})" class="absolute top-1 left-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow hover:bg-red-700 transition" title="حذف الملف"><i class="fa-solid fa-xmark"></i></button>`;
 
             div.innerHTML = `
                 ${deleteBtnHtml}
-                <span class="text-xs font-bold text-slate-600 mb-1">${label}</span>
+                <span class="text-xs font-bold text-slate-600 mb-1 truncate w-full text-center">${label}</span>
                 <img src="${url}" class="h-24 object-contain rounded shadow border bg-white">
             `;
             previewContainer.appendChild(div);
         }
 
-        // إدارة السجل المحلي وتخزينه بذاكرة المتصفح
         function saveToHistory(fileName) {
             let history = JSON.parse(localStorage.getItem('rasd_archive_history') || '[]');
             const newRecord = {
                 name: fileName,
                 date: new Date().toLocaleString('ar-KW'),
-                mode: currentMode === 'civil' ? 'بطاقة مدنية' : 'مستندات متعددة'
+                mode: currentMode === 'civil' ? 'بطاقة مدنية' : (currentMode === 'docs' ? 'مستندات متعددة' : 'ملفات مرفوعة ومعالجة')
             };
             history.unshift(newRecord);
-            if (history.length > 10) history.pop(); // الاحتفاظ بآخر 10 عمليات فقط
+            if (history.length > 15) history.pop();
             localStorage.setItem('rasd_archive_history', JSON.stringify(history));
             loadHistory();
         }
@@ -376,17 +437,17 @@
 
         generatePdfBtn.addEventListener('click', async () => {
             generatePdfBtn.disabled = true;
-            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري توليد ملف الـ PDF...';
+            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري دمج وتوليد ملف الـ PDF...';
 
             try {
-                const pdfDoc = await PDFLib.PDFDocument.create();
+                const mergedPdf = await PDFLib.PDFDocument.create();
 
                 if (currentMode === 'civil') {
-                    const page = pdfDoc.addPage([595.28, 841.89]);
-                    const frontBytes = await civilImages.front.arrayBuffer();
-                    const backBytes = await civilImages.back.arrayBuffer();
-                    const frontImage = await pdfDoc.embedJpg(frontBytes);
-                    const backImage = await pdfDoc.embedJpg(backBytes);
+                    const page = mergedPdf.addPage([595.28, 841.89]);
+                    const frontBytes = await civilImages.front.blob.arrayBuffer();
+                    const backBytes = await civilImages.back.blob.arrayBuffer();
+                    const frontImage = await mergedPdf.embedJpg(frontBytes);
+                    const backImage = await mergedPdf.embedJpg(backBytes);
 
                     const cardWidth = 420;
                     const cardHeight = 420 * (frontImage.height / frontImage.width);
@@ -394,26 +455,35 @@
                     page.drawImage(frontImage, { x: (595.28 - cardWidth) / 2, y: 480, width: cardWidth, height: cardHeight });
                     page.drawImage(backImage, { x: (595.28 - cardWidth) / 2, y: 180, width: cardWidth, height: cardHeight });
                 } else {
-                    for (let blob of multiPages) {
-                        const page = pdfDoc.addPage([595.28, 841.89]);
-                        const imgBytes = await blob.arrayBuffer();
-                        const img = await pdfDoc.embedJpg(imgBytes);
+                    for (let item of multiPages) {
+                        if (item.type === 'pdf') {
+                            // دمج ملف PDF مرفوع مع الملف الحالي
+                            const pdfBytes = await item.blob.arrayBuffer();
+                            const externalPdf = await PDFLib.PDFDocument.load(pdfBytes);
+                            const copiedPages = await mergedPdf.copyPages(externalPdf, externalPdf.getPageIndices());
+                            copiedPages.forEach((page) => mergedPdf.addPage(page));
+                        } else {
+                            // دمج صورة مرفوعة أو ملتقطة كصفحة PDF مستقلة
+                            const page = mergedPdf.addPage([595.28, 841.89]);
+                            const imgBytes = await item.blob.arrayBuffer();
+                            const img = await mergedPdf.embedJpg(imgBytes);
 
-                        const imgWidth = 495;
-                        const imgHeight = 495 * (img.height / img.width);
-                        page.drawImage(img, { 
-                            x: (595.28 - imgWidth) / 2, 
-                            y: (841.89 - imgHeight) / 2, 
-                            width: imgWidth, 
-                            height: imgHeight 
-                        });
+                            const imgWidth = 495;
+                            const imgHeight = 495 * (img.height / img.width);
+                            page.drawImage(img, { 
+                                x: (595.28 - imgWidth) / 2, 
+                                y: (841.89 - imgHeight) / 2, 
+                                width: imgWidth, 
+                                height: imgHeight 
+                            });
+                        }
                     }
                 }
 
-                // العلامة المائية والختم الرقمي
+                // العلامة المائية والختم الرقمي لكل الصفحات
                 const wm = watermarkText.value.trim();
                 if (wm) {
-                    const pages = pdfDoc.getPages();
+                    const pages = mergedPdf.getPages();
                     for (let p of pages) {
                         p.drawText(wm, {
                             x: 100,
@@ -425,11 +495,10 @@
                     }
                 }
 
-                const pdfBytes = await pdfDoc.save();
+                const pdfBytes = await mergedPdf.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf'});
                 const pdfUrl = URL.createObjectURL(blob);
 
-                // بناء اسم الملف الذكي حسب اختيارك
                 const docType = docTypeSelect.value;
                 const personName = docNameInput.value.trim() ? '_' + docNameInput.value.trim().replace(/\s+/g, '_') : '';
                 const finalFileName = `${docType}${personName}_${Date.now()}.pdf`;
@@ -441,12 +510,11 @@
                 previewPdfSection.classList.remove('hidden');
                 previewPdfSection.scrollIntoView({ behavior: 'smooth' });
 
-                // حفظ العملية في السجل المحلي
                 saveToHistory(finalFileName);
 
             } catch (err) {
                 console.error(err);
-                alert('حدث خطأ أثناء معالجة الـ PDF.');
+                alert('حدث خطأ أثناء دمج الملفات. تأكد أن ملفات الـ PDF المرفوعة سليمة وليست محمية بكلمة مرور.');
             } finally {
                 generatePdfBtn.disabled = false;
                 generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> دمج وتوليد ملف الـ PDF نهائياً';
