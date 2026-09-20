@@ -14,7 +14,7 @@
         <h1 class="text-xl font-bold flex items-center gap-2">
             <i class="fa-solid fa-folder-tree"></i> منصة أرشيف رصد (الإصدار الشامل)
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">تصوير، رفع، ودمج PDF</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نظام الأرشيف الذكي</span>
     </header>
 
     <main class="max-w-4xl mx-auto p-6 flex flex-col gap-6 mt-4">
@@ -54,7 +54,7 @@
             </div>
         </div>
 
-        <!-- فلتر الأبيض والأسود (يظهر في وضع الكاميرا) -->
+        <!-- فلتر الأبيض والأسود -->
         <div id="filterSection" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
             <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" id="bwFilterToggle" class="w-4 h-4 text-blue-600 rounded">
@@ -62,7 +62,7 @@
             </label>
         </div>
 
-        <!-- قسم الكاميرا (يظهر في الأوضاع العادية) -->
+        <!-- قسم الكاميرا -->
         <div id="cameraSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center">
             <h2 id="cameraTitle" class="font-bold text-lg text-blue-900 mb-3 w-full text-right border-b pb-2">تصوير الوجه الأمامي للبطاقة</h2>
             
@@ -93,7 +93,7 @@
             </div>
         </div>
 
-        <!-- قسم رفع الملفات والصور (يظهر في وضع الرفع) -->
+        <!-- قسم رفع الملفات والصور -->
         <div id="uploadSection" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-4 text-center">
             <h2 class="font-bold text-lg text-blue-900 border-b pb-2 text-right">رفع الصور أو ملفات الـ PDF الجاهزة</h2>
             <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 gap-3">
@@ -119,21 +119,23 @@
         <!-- قسم المعاينة الحية للـ PDF -->
         <div id="previewPdfSection" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hidden flex flex-col gap-4">
             <h3 class="font-bold text-md text-blue-900 border-b pb-2 flex justify-between items-center">
-                <span>معاينة المستند المدمج مباشرة</span>
+                <span>معاينة المستند المدمج الحالي</span>
                 <span class="text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded">جاهز للاعتماد</span>
             </h3>
-            <iframe id="pdfPreviewFrame" class="w-full h-96 rounded-lg border bg-slate-50"></iframe>
-            <div class="flex gap-4">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a id="viewPdfTabLink" target="_blank" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-external-link-alt"></i> فتح الملف في تبويب جديد
+                </a>
                 <a id="downloadPdfLink" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
                     <i class="fa-solid fa-download"></i> تحميل الملف على الجهاز
                 </a>
             </div>
         </div>
 
-        <!-- سجل الأرشيف المحلي (History) -->
+        <!-- سجل الأرشيف المحلي التفاعلي -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
             <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2 flex justify-between items-center">
-                <span><i class="fa-solid fa-history ml-1"></i> سجل الأرشيف المحلي (الملفات المؤرشفة سابقاً)</span>
+                <span><i class="fa-solid fa-history ml-1"></i> سجل الأرشيف المحلي (انقر لفتح أي ملف محفوظ سابقاً)</span>
                 <button onclick="clearHistory()" class="text-xs text-red-600 hover:underline">مسح السجل</button>
             </h3>
             <div id="historyContainer" class="flex flex-col gap-2">
@@ -175,13 +177,13 @@
         const docNameInput = document.getElementById('docNameInput');
 
         const previewPdfSection = document.getElementById('previewPdfSection');
-        const pdfPreviewFrame = document.getElementById('pdfPreviewFrame');
+        const viewPdfTabLink = document.getElementById('viewPdfTabLink');
         const downloadPdfLink = document.getElementById('downloadPdfLink');
         const historyContainer = document.getElementById('historyContainer');
 
-        let currentMode = 'civil'; // 'civil', 'docs', 'upload'
+        let currentMode = 'civil';
         let civilImages = { front: null, back: null };
-        let multiPages = []; // تخزين الصور أو ملفات الـ PDF المرفوعة
+        let multiPages = [];
 
         async function initCamera() {
             try {
@@ -193,7 +195,7 @@
                 try {
                     video.srcObject = await navigator.mediaDevices.getUserMedia({ video: true });
                 } catch (e) {
-                    console.log('الكاميرا غير متوفرة أو مرفوضة الصلاحية');
+                    console.log('الكاميرا غير متوفرة');
                 }
             }
         }
@@ -317,18 +319,15 @@
             generatePdfBtn.disabled = false;
         });
 
-        // معالجة رفع الملفات الخارجية (صور أو PDF)
         fileUploader.addEventListener('change', async (e) => {
             const files = e.target.files;
             if (!files.length) return;
 
             for (let file of files) {
                 if (file.type === 'application/pdf') {
-                    // إذا كان الملف PDF مرفوع
                     const arrayBuffer = await file.arrayBuffer();
                     multiPages.push({ blob: new Blob([arrayBuffer], {type: 'application/pdf'}), type: 'pdf', name: file.name });
                 } else if (file.type.startsWith('image/')) {
-                    // إذا كان صورة مرفوعة
                     const dataUrl = await new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onload = (e) => resolve(e.target.result);
@@ -398,17 +397,35 @@
             previewContainer.appendChild(div);
         }
 
-        function saveToHistory(fileName) {
-            let history = JSON.parse(localStorage.getItem('rasd_archive_history') || '[]');
-            const newRecord = {
-                name: fileName,
-                date: new Date().toLocaleString('ar-KW'),
-                mode: currentMode === 'civil' ? 'بطاقة مدنية' : (currentMode === 'docs' ? 'مستندات متعددة' : 'ملفات مرفوعة ومعالجة')
-            };
-            history.unshift(newRecord);
-            if (history.length > 15) history.pop();
-            localStorage.setItem('rasd_archive_history', JSON.stringify(history));
-            loadHistory();
+        function base64ToBlobUrl(base64Data, contentType = 'application/pdf') {
+            const parts = base64Data.split(';base64,');
+            const byteCharacters = atob(parts[1]);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: contentType });
+            return URL.createObjectURL(blob);
+        }
+
+        async function saveToHistory(fileName, pdfBlob) {
+            const reader = new FileReader();
+            reader.readAsDataURL(pdfBlob);
+            reader.onloadend = function() {
+                const base64data = reader.result;
+                let history = JSON.parse(localStorage.getItem('rasd_archive_history') || '[]');
+                const newRecord = {
+                    name: fileName,
+                    date: new Date().toLocaleString('ar-KW'),
+                    mode: currentMode === 'civil' ? 'بطاقة مدنية' : (currentMode === 'docs' ? 'مستندات متعددة' : 'ملفات مرفوعة'),
+                    data: base64data
+                };
+                history.unshift(newRecord);
+                if (history.length > 10) history.pop();
+                localStorage.setItem('rasd_archive_history', JSON.stringify(history));
+                loadHistory();
+            }
         }
 
         function loadHistory() {
@@ -418,15 +435,40 @@
                 return;
             }
             historyContainer.innerHTML = '';
-            history.forEach(item => {
+            history.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border text-xs';
                 div.innerHTML = `
-                    <span class="font-bold text-blue-900"><i class="fa-solid fa-file-pdf text-red-500 ml-1"></i> ${item.name}</span>
-                    <span class="text-slate-500">${item.date} (${item.mode})</span>
+                    <span class="font-bold text-blue-900 truncate max-w-[180px]"><i class="fa-solid fa-file-pdf text-red-500 ml-1"></i> ${item.name}</span>
+                    <span class="text-slate-500">${item.date}</span>
+                    <div class="flex gap-1">
+                        <button onclick="openArchivedPdf(${index})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition"><i class="fa-solid fa-eye"></i> فتح</button>
+                        <button onclick="downloadArchivedPdf(${index})" class="bg-blue-800 hover:bg-blue-900 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow transition"><i class="fa-solid fa-download"></i></button>
+                    </div>
                 `;
                 historyContainer.appendChild(div);
             });
+        }
+
+        window.openArchivedPdf = function(index) {
+            let history = JSON.parse(localStorage.getItem('rasd_archive_history') || '[]');
+            const record = history[index];
+            if (!record || !record.data) return;
+
+            const blobUrl = base64ToBlobUrl(record.data);
+            window.open(blobUrl, '_blank');
+        }
+
+        window.downloadArchivedPdf = function(index) {
+            let history = JSON.parse(localStorage.getItem('rasd_archive_history') || '[]');
+            const record = history[index];
+            if (!record || !record.data) return;
+
+            const blobUrl = base64ToBlobUrl(record.data);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = record.name;
+            a.click();
         }
 
         window.clearHistory = function() {
@@ -457,13 +499,11 @@
                 } else {
                     for (let item of multiPages) {
                         if (item.type === 'pdf') {
-                            // دمج ملف PDF مرفوع مع الملف الحالي
                             const pdfBytes = await item.blob.arrayBuffer();
                             const externalPdf = await PDFLib.PDFDocument.load(pdfBytes);
                             const copiedPages = await mergedPdf.copyPages(externalPdf, externalPdf.getPageIndices());
                             copiedPages.forEach((page) => mergedPdf.addPage(page));
                         } else {
-                            // دمج صورة مرفوعة أو ملتقطة كصفحة PDF مستقلة
                             const page = mergedPdf.addPage([595.28, 841.89]);
                             const imgBytes = await item.blob.arrayBuffer();
                             const img = await mergedPdf.embedJpg(imgBytes);
@@ -480,7 +520,6 @@
                     }
                 }
 
-                // العلامة المائية والختم الرقمي لكل الصفحات
                 const wm = watermarkText.value.trim();
                 if (wm) {
                     const pages = mergedPdf.getPages();
@@ -503,18 +542,18 @@
                 const personName = docNameInput.value.trim() ? '_' + docNameInput.value.trim().replace(/\s+/g, '_') : '';
                 const finalFileName = `${docType}${personName}_${Date.now()}.pdf`;
 
-                pdfPreviewFrame.src = pdfUrl;
+                viewPdfTabLink.href = pdfUrl;
                 downloadPdfLink.href = pdfUrl;
                 downloadPdfLink.download = finalFileName;
                 
                 previewPdfSection.classList.remove('hidden');
                 previewPdfSection.scrollIntoView({ behavior: 'smooth' });
 
-                saveToHistory(finalFileName);
+                saveToHistory(finalFileName, blob);
 
             } catch (err) {
                 console.error(err);
-                alert('حدث خطأ أثناء دمج الملفات. تأكد أن ملفات الـ PDF المرفوعة سليمة وليست محمية بكلمة مرور.');
+                alert('حدث خطأ أثناء دمج الملفات.');
             } finally {
                 generatePdfBtn.disabled = false;
                 generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> دمج وتوليد ملف الـ PDF نهائياً';
