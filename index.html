@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أرشيف - النظام الشامل (معاينة حية وحذف)</title>
+    <title>منصة أرشيف رصد - النسخة الإدارية المتكاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,9 +12,9 @@
 
     <header class="bg-blue-900 text-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fa-solid fa-shield-halved"></i> منصة أرشيف المستندات والبطاقات
+            <i class="fa-solid fa-folder-tree"></i> منصة أرشيف رصد (الإصدار الذكي)
         </h1>
-        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نسخة المعاينة والحذف</span>
+        <span class="text-sm bg-blue-800 px-3 py-1 rounded-full">نظام إداري متكامل</span>
     </header>
 
     <main class="max-w-4xl mx-auto p-6 flex flex-col gap-6 mt-4">
@@ -30,15 +29,34 @@
             </button>
         </div>
 
-        <!-- إعدادات التعديل والفلترة السريعة -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-            <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-lg border hover:bg-slate-100 transition">
-                <input type="checkbox" id="bwFilterToggle" class="w-4 h-4 text-blue-600 rounded">
-                <span class="text-xs font-bold text-slate-700">تفعيل فلتر الماسح الضوئي (أبيض وأسود فائق الوضوح)</span>
-            </label>
+        <!-- إعدادات التسمية الذكية والفلترة والختم -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <div>
-                <input type="text" id="watermarkText" placeholder="العلامة المائية الاختيارية (مثال: صورة مطابقة للأصل)" class="w-full border rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
+                <label class="block text-xs font-bold text-slate-700 mb-1">نوع المستند (للتسمية الذكية):</label>
+                <select id="docTypeSelect" class="w-full border rounded-lg p-2.5 text-xs focus:outline-none focus:border-blue-600 bg-slate-50 font-bold">
+                    <option value="Civil_ID">بطاقة مدنية</option>
+                    <option value="Residency">إقامة</option>
+                    <option value="Contract">عقد عمل</option>
+                    <option value="Passport">جواز سفر</option>
+                    <option value="Official_Letter">مستند رسمي / كتاب</option>
+                </select>
             </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">اسم صاحب المستند / الملف:</label>
+                <input type="text" id="docNameInput" placeholder="مثال: حسان محمود" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">العلامة المائية / الختم النصي:</label>
+                <input type="text" id="watermarkText" placeholder="مثال: ستابيلو - مطابق للأصل" class="w-full border rounded-lg p-2 text-xs focus:outline-none focus:border-blue-600 bg-slate-50">
+            </div>
+        </div>
+
+        <!-- زر تفعيل الفلتر -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="bwFilterToggle" class="w-4 h-4 text-blue-600 rounded">
+                <span class="text-xs font-bold text-slate-700">تفعيل فلتر الماسح الضوئي (أبيض وأسود فائق الوضوح للكتابة)</span>
+            </label>
         </div>
 
         <!-- قسم الكاميرا -->
@@ -72,9 +90,9 @@
             </div>
         </div>
 
-        <!-- قسم المعاينة وإدارة الصفحات الملتقطة -->
+        <!-- قسم المعاينة وإدارة الصفحات (مع زر الحذف X) -->
         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة وإدارتها (مع إمكانية الحذف):</h3>
+            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2">الملفات الملتقطة وإدارتها:</h3>
             <div id="previewContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <p class="text-xs text-slate-400 col-span-full text-center py-4">لم يتم التقاط أي صور بعد</p>
             </div>
@@ -96,6 +114,17 @@
                 <a id="downloadPdfLink" class="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-bold text-center transition shadow flex items-center justify-center gap-2">
                     <i class="fa-solid fa-download"></i> تحميل الملف على الجهاز
                 </a>
+            </div>
+        </div>
+
+        <!-- سجل الأرشيف المحلي (History) -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="font-bold text-md text-blue-900 mb-3 border-b pb-2 flex justify-between items-center">
+                <span><i class="fa-solid fa-history ml-1"></i> سجل الأرشيف المحلي (آخر الملفات المؤرشفة)</span>
+                <button onclick="clearHistory()" class="text-xs text-red-600 hover:underline">مسح السجل</button>
+            </h3>
+            <div id="historyContainer" class="flex flex-col gap-2">
+                <p class="text-xs text-slate-400 text-center py-3">لا توجد عمليات أرشيف مسجلة حتى الآن</p>
             </div>
         </div>
 
@@ -122,9 +151,13 @@
         
         const bwFilterToggle = document.getElementById('bwFilterToggle');
         const watermarkText = document.getElementById('watermarkText');
+        const docTypeSelect = document.getElementById('docTypeSelect');
+        const docNameInput = document.getElementById('docNameInput');
+
         const previewPdfSection = document.getElementById('previewPdfSection');
         const pdfPreviewFrame = document.getElementById('pdfPreviewFrame');
         const downloadPdfLink = document.getElementById('downloadPdfLink');
+        const historyContainer = document.getElementById('historyContainer');
 
         let currentMode = 'civil';
         let civilImages = { front: null, back: null };
@@ -251,7 +284,6 @@
             generatePdfBtn.disabled = false;
         });
 
-        // دالة الحذف (زر X الأحمر)
         window.deleteItem = function(type, index) {
             if (type === 'front') {
                 civilImages.front = null;
@@ -293,7 +325,6 @@
         function appendPreview(label, url, type, index) {
             const div = document.createElement('div');
             div.className = 'border rounded-lg p-2 flex flex-col items-center bg-slate-50 relative shadow-sm';
-            
             let deleteParam = type === 'doc' ? `'doc', ${index}` : `'${type}', null`;
             let deleteBtnHtml = `<button onclick="deleteItem(${deleteParam})" class="absolute top-1 left-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow hover:bg-red-700 transition" title="حذف الصورة"><i class="fa-solid fa-xmark"></i></button>`;
 
@@ -305,9 +336,47 @@
             previewContainer.appendChild(div);
         }
 
+        // إدارة السجل المحلي وتخزينه بذاكرة المتصفح
+        function saveToHistory(fileName) {
+            let history = JSON.parse(localStorage.getItem('rasd_archive_history') || '[]');
+            const newRecord = {
+                name: fileName,
+                date: new Date().toLocaleString('ar-KW'),
+                mode: currentMode === 'civil' ? 'بطاقة مدنية' : 'مستندات متعددة'
+            };
+            history.unshift(newRecord);
+            if (history.length > 10) history.pop(); // الاحتفاظ بآخر 10 عمليات فقط
+            localStorage.setItem('rasd_archive_history', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            let history = JSON.parse(localStorage.getItem('rasd_archive_history') || '[]');
+            if (history.length === 0) {
+                historyContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-3">لا توجد عمليات أرشيف مسجلة حتى الآن</p>';
+                return;
+            }
+            historyContainer.innerHTML = '';
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-slate-50 p-2.5 rounded-lg border text-xs';
+                div.innerHTML = `
+                    <span class="font-bold text-blue-900"><i class="fa-solid fa-file-pdf text-red-500 ml-1"></i> ${item.name}</span>
+                    <span class="text-slate-500">${item.date} (${item.mode})</span>
+                `;
+                historyContainer.appendChild(div);
+            });
+        }
+
+        window.clearHistory = function() {
+            localStorage.removeItem('rasd_archive_history');
+            loadHistory();
+        }
+        loadHistory();
+
         generatePdfBtn.addEventListener('click', async () => {
             generatePdfBtn.disabled = true;
-            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري توليد المعاينة الحية...';
+            generatePdfBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري توليد ملف الـ PDF...';
 
             try {
                 const pdfDoc = await PDFLib.PDFDocument.create();
@@ -341,6 +410,7 @@
                     }
                 }
 
+                // العلامة المائية والختم الرقمي
                 const wm = watermarkText.value.trim();
                 if (wm) {
                     const pages = pdfDoc.getPages();
@@ -359,13 +429,20 @@
                 const blob = new Blob([pdfBytes], { type: 'application/pdf'});
                 const pdfUrl = URL.createObjectURL(blob);
 
-                // إظهار المعاينة الحية مباشرة داخل الـ iframe بداخل الموقع
+                // بناء اسم الملف الذكي حسب اختيارك
+                const docType = docTypeSelect.value;
+                const personName = docNameInput.value.trim() ? '_' + docNameInput.value.trim().replace(/\s+/g, '_') : '';
+                const finalFileName = `${docType}${personName}_${Date.now()}.pdf`;
+
                 pdfPreviewFrame.src = pdfUrl;
                 downloadPdfLink.href = pdfUrl;
-                downloadPdfLink.download = (currentMode === 'civil' ? 'Civil_ID_' : 'Document_Scan_') + Date.now() + '.pdf';
+                downloadPdfLink.download = finalFileName;
                 
                 previewPdfSection.classList.remove('hidden');
                 previewPdfSection.scrollIntoView({ behavior: 'smooth' });
+
+                // حفظ العملية في السجل المحلي
+                saveToHistory(finalFileName);
 
             } catch (err) {
                 console.error(err);
